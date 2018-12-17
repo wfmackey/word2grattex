@@ -268,7 +268,7 @@ word2grattex <- function(path = ".",
       file.remove(bib)
 
       bib2grattex(bib = bibpath.bib,
-                  from.word2grattex = TRUE)
+                  fromWord2grattex = TRUE)
 
       # Read in again
       out_tex_lines <- read_lines("outtex.tex")
