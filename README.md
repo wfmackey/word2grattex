@@ -1,4 +1,4 @@
-#word2grattex
+# word2grattex
 
 `word2grattex` is deisgned to make Word to LaTeX conversion faster and more accurate. It is relatively flexible but is most effective when used within the wider Grattan report production ecosystem.
 
