@@ -208,9 +208,6 @@ if (testRun) {
 
       }
 
-      # ALRIGHT WE'RE USING DPLYR
-      require(dplyr)
-
       # Create findCitation
       findCitation <- tibble(
                               "fullAuthor"   = authorList,

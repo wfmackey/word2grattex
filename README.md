@@ -46,6 +46,8 @@ Once you have created a repository for your new report, add your `.docx`, `.bib`
 ```
 
 
+Note that if you haven't set up a repository yet, you can turn on the `downloadGrattex` option `word2grattex(..., downloadGrattex = TRUE`, which will download the current version of the Grattex template and place your documents within it.
+
 ### Install and call: how to use it
 The package is run through `R` and can be installed using `devtools::github_install`:
 
@@ -92,14 +94,14 @@ The function takes a Word document in the Grattan template and:
 * Replaces cross-references with appropriate labels.
     - "See Section 2.2" &rarr; `See \Cref{subsec:section-name}`.
 * Replaces figure-references with appropriate labels.
-    - "Figure 9.1 shows" &rarr; `\Cref{fig:figure-caption} shows`.
+    - "Figure 19 shows" &rarr; `\Cref{fig:figure-caption} shows`.
 * Replaces in-text citations with appropriate `cite` commands.
-    - Uses `bbib2grattex` function.
+    - Uses `bib2grattex` function.
     - `.bib` keys are automatically generated in the format `AuthorYearTitle` (default is to cap the title to 20 characters). 
 		- Handles (all-but-one) citation complications:
-        - 'Norton _et al._ (2018a).' &rarr; `\<fieldset></fieldset>ootcite{Norton2018droppingoutthecostsa}`
-        - 'See discussion in Terrill (2018), p. 10.' &rarr; `\footnote{See discussion in \textcite[][10]{Terrill2018unfreezing-disc}.}`. 
-        - 'Daley and Wood (2016), chapter 1; Smith (1776e), chapter 3.' &rarr; `\footcites[][chapter~3]{Daley2018hot-property}[][chapter~3]{Smith1776the-wealth-of-n}.}`. 
+        - 'Norton _et al._ (2018a).' &rarr; `\footcite{Norton2018droppingoutthecostsa}`
+        - 'See discussion in Terrill (2018), p. 10.' &rarr; `\footnote{See discussion in \textcite[][10]{Terrill2018unfreezingdiscountra}.}`. 
+        - 'Daley and Wood (2016), chapter 1; Smith (1776e), chapter 3.' &rarr; `\footcites[][chapter~3]{Daley2018hotproperty}[][chapter~3]{Smith1776thewealthofnat}.}`. 
 
 
 Note: as our _Style of Quiet Achievers_ fails to distinguish between '[not-quite twins](http://blog.apastyle.org/apastyle/2011/10/reference-twins.html)', the `bib2grattex` conversion can't tell the difference. A solution to this problem is being considered. For now, manual identification of not-quite twins is required. Mainly: **check your _Daley et al._ references**.
@@ -110,8 +112,10 @@ Note: as our _Style of Quiet Achievers_ fails to distinguish between '[not-quite
 
 When `word2grattex` is finished, it will produce a `.tex` file that can be built out of the box. Some things need to be done manually:
 
+* Check for errors.
 * Add Tables.
 * Add Box environments.
+    - This feature can't be added because there is no way to tell when a box ends.
 * Add Overview and Recommendations. Update Acknowledgements, ISBN, report number, FrontPage.
 * Optimise figure placement. 
     - Use `FigurePlacementScore` to help.
