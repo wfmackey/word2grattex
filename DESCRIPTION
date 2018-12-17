@@ -6,7 +6,7 @@ Author@R: person("Will", "Mackey", email = "william.mackey@grattaninstitute.edu.
                 role = c("aut", "cre"))
 Description: word2grattex is designed to make Word to LaTeX conversion quick and accurate. It is relatively flexible but is most effective when used within the wider Grattan report-production ecosystem.
 License: GPL-3
-Imports:
+Depends:
     dplyr,
     grattanReporter,
     readr,
