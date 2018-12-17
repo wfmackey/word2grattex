@@ -128,9 +128,11 @@ word2grattex <- function(path = ".",
   if (!file.exists("Report.tex")) {
     # Download and add current Grattex preamble if not present
     download.file(url ="https://raw.githubusercontent.com/HughParsonage/grattex/master/Report.tex", destfile = "Report.tex")
-    getpreamble <- read_lines("Report.tex")
-    file.remove("Report.tex")
   }
+
+  getpreamble <- read_lines("Report.tex")
+
+  if (removeReport.tex) file.remove("Report.tex")
 
   # The first line can carry over some cruft: remove closing double brace if found
   if (nchar(out_tex_lines[1]) - nchar(gsub("\\}", "", out_tex_lines[1])) !=  nchar(out_tex_lines[1]) - nchar(gsub("\\{", "", out_tex_lines[1])))  out_tex_lines[1] <- gsub("\\}\\}", "\\}", out_tex_lines[1])
