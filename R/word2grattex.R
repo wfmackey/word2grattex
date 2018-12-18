@@ -141,18 +141,18 @@ word2grattex <- function(path = ".",
   # Construct report framework based on segmentation status
   if (!segmented) {
 
-      out_tex_lines <-     c( getpreamble[(which(getpreamble == "\\documentclass{grattan}")):(which(getpreamble == "\\begin{document}"))]
-                              , ""
-                              , "\\contentspage"
-                              , "\\listoffigures"
-                              , "\\listoftables"
-                              , ""
-                              , ""
-                              , out_tex_lines
-                              , ""
-                              , "\\printbibliography"
-                              , ""
-                              , "\\end{document}"
+      out_tex_lines <-     c( getpreamble[(which(getpreamble == "\\documentclass{grattan}")):(which(getpreamble == "\\begin{document}"))],
+                              "",
+                              "\\contentspage",
+                              "\\listoffigures",
+                              "\\listoftables",
+                              "",
+                              "",
+                              out_tex_lines,
+                              "",
+                              "\\printbibliography",
+                              "",
+                              "\\end{document}"
                               )
   }
 
@@ -194,9 +194,11 @@ word2grattex <- function(path = ".",
     tagback <- c(tag[3:length(tag)], FALSE, FALSE)
     ### fix \\texorpdfstring
     out_tex_lines <- gsub("(.*)\\\\texorpdfstring\\{\\\\?e?m?p?h?\\{?\\\\\\\\", "\\1", out_tex_lines)
+
     out_tex_lines <- ifelse(tag,
                             gsub("(.*\\})\\{.*?\\}\\}(\\\\label.*?\\})\\}", "\\1\\2", out_tex_lines),
                             out_tex_lines)
+
     out_tex_lines <- ifelse(tagback,
                             gsub("\\\\hypertarget\\{.*\\}\\{\\%?", "", out_tex_lines),
                             out_tex_lines)
