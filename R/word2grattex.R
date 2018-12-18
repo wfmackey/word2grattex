@@ -141,18 +141,18 @@ word2grattex <- function(path = ".",
   # Construct report framework based on segmentation status
   if (!segmented) {
 
-      out_tex_lines <-     c( getpreamble[(which(getpreamble == "\\documentclass{grattan}")):(which(getpreamble == "\\begin{document}"))]
-                              , ""
-                              , "\\contentspage"
-                              , "\\listoffigures"
-                              , "\\listoftables"
-                              , ""
-                              , ""
-                              , out_tex_lines
-                              , ""
-                              , "\\printbibliography"
-                              , ""
-                              , "\\end{document}"
+      out_tex_lines <-     c( getpreamble[(which(getpreamble == "\\documentclass{grattan}")):(which(getpreamble == "\\begin{document}"))],
+                              "",
+                              "\\contentspage",
+                              "\\listoffigures",
+                              "\\listoftables",
+                              "",
+                              "",
+                              out_tex_lines,
+                              "",
+                              "\\printbibliography",
+                              "",
+                              "\\end{document}"
                               )
   }
 
@@ -194,9 +194,11 @@ word2grattex <- function(path = ".",
     tagback <- c(tag[3:length(tag)], FALSE, FALSE)
     ### fix \\texorpdfstring
     out_tex_lines <- gsub("(.*)\\\\texorpdfstring\\{\\\\?e?m?p?h?\\{?\\\\\\\\", "\\1", out_tex_lines)
+
     out_tex_lines <- ifelse(tag,
                             gsub("(.*\\})\\{.*?\\}\\}(\\\\label.*?\\})\\}", "\\1\\2", out_tex_lines),
                             out_tex_lines)
+
     out_tex_lines <- ifelse(tagback,
                             gsub("\\\\hypertarget\\{.*\\}\\{\\%?", "", out_tex_lines),
                             out_tex_lines)
@@ -252,27 +254,36 @@ word2grattex <- function(path = ".",
     tomaster.tex <- paste0("grattex-master/",substring(out.tex,3))
 
     if (bibReplace) {
-      print("Fixing references")
+      message("Fixing references")
 
 
       # Write tex file temporarily
       write_lines(out_tex_lines, "outtex.tex")
 
       # Assign bib
-      assign("bib", dir(path = ".",
-                        pattern = "\\.bib$",
-                        full.names = TRUE))
+      assign("bib",
+             dir(path = ".", pattern = "\\.bib$", full.names = TRUE) %>%
+             substring(., 3))
 
-      if (downloadGrattex)  bibpath.bib <- paste0("grattex-master/bib/",substring(bib, 3))
-      if (!downloadGrattex) bibpath.bib <- paste0("bib/",substring(bib, 3))
 
-      file.copy(bib, bibpath.bib)
-      file.remove(bib)
+      # assign("bib", dir(path = ".",
+      #                   pattern = "\\.bib$",
+      #                   full.names = TRUE))
+      if (downloadGrattex)  bibPath <- paste0("grattex-master/bib/", bib)
+      if (!downloadGrattex) bibPath <- paste0("bib/", bib)
 
-      bib2grattex(bib = bibpath.bib,
+
+      bib2grattex(bibName = bib,
+                  texName = "",
                   fromWord2grattex = TRUE)
 
-      # Read in again
+      # Move bib file to ./bib folder
+      file.copy(bib, bibPath)
+      # Drop duplicate
+      file.remove(bib)
+
+
+      # Read updated .tex file post-bib2grattex
       out_tex_lines <- read_lines("outtex.tex")
       # Drop temp file
       file.remove("outtex.tex")
@@ -281,16 +292,16 @@ word2grattex <- function(path = ".",
       # Remove old "put-new-refs-here" file and replace with new
       if (downloadGrattex) {
         # tryCatch(file.remove("grattex-master/bib/put-new-refs-here.bib"))
-        file.rename(bibpath.bib, "grattex-master/bib/put-new-refs-here.bib")
+        file.rename(bibPath, "grattex-master/bib/put-new-refs-here.bib")
       }
       if (!downloadGrattex) {
         # tryCatch(file.remove("bib/put-new-refs-here.bib"))
-        file.rename(bibpath.bib, "bib/put-new-refs-here.bib")
+        file.rename(bibPath, "bib/put-new-refs-here.bib")
       }
     }
 
 
-
+    message("Your bib file has been renamed 'put-new-refs-here.bib' and is stored in the bib/ folder")
 
 
 # ---- Build Figure environments ---- #
@@ -343,7 +354,7 @@ word2grattex <- function(path = ".",
       collision <- ifelse(previous.graphic==0 | previous.graphic>fig, FALSE, TRUE)
 
       counter = counter + 1
-      print(counter)
+
       # only perform if Figure: is found and there is no collision; otherwise just comment out
       if (found.fig==TRUE & collision==FALSE) {
 
@@ -592,7 +603,7 @@ l <- 51
   # Part 2: Loop sections over chapters to get relative section numbering
   first = 0
   for (chap in chapters) {
-    print(paste0("Starting chapter ", chap))
+    message(paste0("Starting chapter ", chap))
     # Retrieve sections in this chapter
     current.section <- section.starts[section.starts >= chapter.starts[chap] & section.starts <= chapter.ends[chap]]
     section.total  <- length(current.section)
@@ -614,7 +625,9 @@ l <- 51
   # Loop subsections over sections to get relative subsection numbering
   first = 0
   for (sec in 1:length(section.starts)) {
-    print(paste0("Starting section ", sec))
+
+    message(paste0("Starting section ", sec))
+
     # Retrieve sections in this section
     current.subsection <- subsection.starts[subsection.starts >= section.starts[sec] & subsection.starts <= section.ends[sec]]
     subsection.total  <- length(current.subsection)
@@ -645,8 +658,6 @@ l <- 51
   find <- gsub("\\.", "\\\\\\.", text)
   replace <- c(chapter.labels, section.labels, subsection.labels)
 
-
-
   for (n in length(find):1) {
 
     # Match chapter: finding n
@@ -654,6 +665,8 @@ l <- 51
     # to do
     # Chapters 1 and n
     # to do
+
+    message(paste0("Replacing ", type[n], " ", gsub("\\\\", "", find[n]), " with \\Cref{", replace[n]), "}")
 
     if (type[n] == "Chapter") {
       # Chapter n
@@ -719,7 +732,7 @@ if (testRun) {
   if (!downloadGrattex)  tomaster.tex <- paste0(substring(out.tex,3))
 
 
-  print("Conversion complete")
+  message("~Conversion complete~")
 
 
 
