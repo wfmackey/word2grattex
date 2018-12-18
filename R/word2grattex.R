@@ -254,7 +254,7 @@ word2grattex <- function(path = ".",
     tomaster.tex <- paste0("grattex-master/",substring(out.tex,3))
 
     if (bibReplace) {
-      print("Fixing references")
+      message("Fixing references")
 
 
       # Write tex file temporarily
@@ -269,7 +269,6 @@ word2grattex <- function(path = ".",
       # assign("bib", dir(path = ".",
       #                   pattern = "\\.bib$",
       #                   full.names = TRUE))
-print(bib)
       if (downloadGrattex)  bibPath <- paste0("grattex-master/bib/", bib)
       if (!downloadGrattex) bibPath <- paste0("bib/", bib)
 
@@ -277,16 +276,14 @@ print(bib)
       bib2grattex(bibName = bib,
                   texName = "",
                   fromWord2grattex = TRUE)
-print(100)
-print(downloadGrattex)
-print(bib)
-print(bibPath)
-print(getwd())
+
+      # Move bib file to ./bib folder
       file.copy(bib, bibPath)
-print(100)
+      # Drop duplicate
       file.remove(bib)
 
-      # Read in again
+
+      # Read updated .tex file post-bib2grattex
       out_tex_lines <- read_lines("outtex.tex")
       # Drop temp file
       file.remove("outtex.tex")
@@ -357,7 +354,7 @@ print(100)
       collision <- ifelse(previous.graphic==0 | previous.graphic>fig, FALSE, TRUE)
 
       counter = counter + 1
-      print(counter)
+
       # only perform if Figure: is found and there is no collision; otherwise just comment out
       if (found.fig==TRUE & collision==FALSE) {
 
@@ -606,7 +603,7 @@ l <- 51
   # Part 2: Loop sections over chapters to get relative section numbering
   first = 0
   for (chap in chapters) {
-    print(paste0("Starting chapter ", chap))
+    message(paste0("Starting chapter ", chap))
     # Retrieve sections in this chapter
     current.section <- section.starts[section.starts >= chapter.starts[chap] & section.starts <= chapter.ends[chap]]
     section.total  <- length(current.section)
@@ -628,7 +625,9 @@ l <- 51
   # Loop subsections over sections to get relative subsection numbering
   first = 0
   for (sec in 1:length(section.starts)) {
-    print(paste0("Starting section ", sec))
+
+    message(paste0("Starting section ", sec))
+
     # Retrieve sections in this section
     current.subsection <- subsection.starts[subsection.starts >= section.starts[sec] & subsection.starts <= section.ends[sec]]
     subsection.total  <- length(current.subsection)
@@ -659,8 +658,6 @@ l <- 51
   find <- gsub("\\.", "\\\\\\.", text)
   replace <- c(chapter.labels, section.labels, subsection.labels)
 
-
-
   for (n in length(find):1) {
 
     # Match chapter: finding n
@@ -668,6 +665,8 @@ l <- 51
     # to do
     # Chapters 1 and n
     # to do
+
+    message(paste0("Replacing ", type[n], " ", gsub("\\\\", "", find[n]), " with \\Cref{", replace[n]), "}")
 
     if (type[n] == "Chapter") {
       # Chapter n
@@ -733,7 +732,7 @@ if (testRun) {
   if (!downloadGrattex)  tomaster.tex <- paste0(substring(out.tex,3))
 
 
-  print("Conversion complete")
+  message("~Conversion complete~")
 
 
 

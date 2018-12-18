@@ -29,12 +29,14 @@ bib2grattex <- function(path = ".",
                         ibid = TRUE,
                         testRun = FALSE
                         ) {
-print(6)
+
+  findNumberTotal <- 6   #There are X find alternatives (this needs to be updated manually for now)
+
+
   # Tidy path and bib if needed
   path = gsub("\\/$", "" , path)
   if (!grepl("\\.bib$", bibName)) bibName = paste0(bibName, ".bib")
   if (!grepl("\\.tex$", texName)) texName = paste0(texName, ".tex")
-print(7)
 
   # Preserving user's working directory
   if (!fromWord2grattex) {
@@ -43,14 +45,10 @@ print(7)
   on.exit(setwd(current_wd))
   }
 
-print(8)
-print(getwd())
-print(bibName)
   # Lint the .bib file and read in lines
   lint_bib(bibName)
-print(9)
   bib.all <- read_lines(bibName)
-print(10)
+
 
   # Remove existing key and create temporary unique ID
   tempkey = 0
@@ -313,60 +311,47 @@ print(10)
 
         citationSearch <- function(findNumber, brackets) {
 
-          if (number != 1 & !brackets) message(paste0("Replacing ",      get(paste0("find", findNumber))[bib], " with ", replace[bib]))
-          if (number == 1 |  brackets) message(paste0("Also replacing ", get(paste0("find", findNumber))[bib], " with ", replace[bib]))
+          thisCurrent <- get(paste0("find", findNumber))[bib]
+          thisReplace <- replace[bib]
 
-          texFile <- gsub(get(paste0("find", findNumber))[bib], replace[bib], texFile, fixed = TRUE)
+          if (findNumber == 1 & !brackets) {
+            message(paste0("Replacing ", thisCurrent, " with ", thisReplace))
+            message(paste0("   And looking for/replacing a few variations on ", thisCurrent))
+          }
+
+          texFile <- gsub(thisCurrent, thisReplace, texFile, fixed = TRUE)
 
         }
+
 
         for (bib in 1:bibTotal) {
-          message(paste0("Replacing ", find1[bib], " with ", replace[bib]))
-          texFile <- gsub(find1[bib], replace[bib], texFile, fixed = TRUE)
 
-          if (find1[bib] != find2[bib]) {
-            message(paste0("Replacing ", find2[bib], " with ", replace[bib]))
-            texFile <- gsub(find2[bib], replace[bib], texFile, fixed = TRUE)
-          }
+          for (num in 1:findNumberTotal) {
 
-          if (find2[bib] != find3[bib]) {
-            message(paste0("Replacing ", find3[bib], " with ", replace[bib]))
-            texFile <- gsub(find3[bib], replace[bib], texFile, fixed = TRUE)
-          }
+            citationSearch(findNumber = num, brackets = FALSE)
+            citationSearch(findNumber = num, brackets = TRUE)
 
-          if (find3[bib] != find4[bib]) {
-            message(paste0("Replacing ", find4[bib], " with ", replace[bib]))
-            texFile <- gsub(find4[bib], replace[bib], texFile, fixed = TRUE)
-          }
-
-          if (find4[bib] != find5[bib]) {
-            message(paste0("Replacing ", find5[bib], " with ", replace[bib]))
-            texFile <- gsub(find5[bib], replace[bib], texFile, fixed = TRUE)
-          }
-
-          if (find5[bib] != find6[bib]) {
-            message(paste0("Replacing ", find6[bib], " with ", replace[bib]))
-            texFile <- gsub(find6[bib], replace[bib], texFile, fixed = TRUE)
           }
         }
 
 
-        # ---- ibid functionality ---- #
+# ---- ibid functionality ---- #
 
-if (ibid) {
-  # Two processes:
-    ## one line process (via simple gsub)
-  texFile <- gsub("(.*textcite.*?\\{([a-zA-Z0-9]*)\\}.*?)(?:i|I)bid\\.?",
-                  "\\1\\\\textcite[][]\\{\\2\\}",
-                  texFile)
+  if (ibid) {
+    # Two processes:
+      ## one line process (via simple gsub)
+    texFile <- gsub("(.*textcite.*?\\{([a-zA-Z0-9]*)\\}.*?)(?:i|I)bid\\.?",
+                    "\\1\\\\textcite[][]\\{\\2\\}",
+                    texFile)
 
-    ## multi-line process (harder --> might need to number)
+      ## multi-line process (harder --> might need to number)
+      ## tbd, see issue #2
 
 
 
-}
+  }
 
-    # ---- Managing textcites; creating footcites ---- #
+# ---- Managing textcites; creating footcites ---- #
 
         # Remove \emph from texcites in footnotes: if \emph surrounds a \textcite, remove it
         texFile <- gsub("\\\\emph\\{(\\\\textcite\\[\\]\\[\\]\\{[^\\}]*\\})\\}",

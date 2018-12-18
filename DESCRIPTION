@@ -9,6 +9,7 @@ License: GPL-3
 Depends:
     dplyr,
     grattanReporter,
+    purrr,
     readr,
     stringr,
     tools
