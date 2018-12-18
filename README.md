@@ -121,7 +121,7 @@ When `word2grattex` is finished, it will produce a `.tex` file that can be built
     - Use `FigurePlacementScore` to help.
 * Proofread lots.
 
-Then, run through `chreckGrattan`/`Travis` and release. 
+Then, run through `checkGrattan`/`Travis` and release. 
 
 
 
