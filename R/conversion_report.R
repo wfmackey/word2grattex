@@ -14,6 +14,8 @@ markobj <- c('---',
              'print(b)',
              '```')
 
-render(markobj, output = "html_document")
-?render
+markdown::markdownToHTML(text = knitr::knit(text = markobj), output = 'test.html')
+
+rmarkdown
+
 browseURL("test.html")
