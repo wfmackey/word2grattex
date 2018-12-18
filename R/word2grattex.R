@@ -261,18 +261,30 @@ word2grattex <- function(path = ".",
       write_lines(out_tex_lines, "outtex.tex")
 
       # Assign bib
-      assign("bib", dir(path = ".",
-                        pattern = "\\.bib$",
-                        full.names = TRUE))
+      assign("bib",
+             dir(path = ".", pattern = "\\.bib$", full.names = TRUE) %>%
+             substring(., 3))
 
-      if (downloadGrattex)  bibpath.bib <- paste0("grattex-master/bib/",substring(bib, 3))
-      if (!downloadGrattex) bibpath.bib <- paste0("bib/",substring(bib, 3))
 
-      file.copy(bib, bibpath.bib)
-      file.remove(bib)
+      # assign("bib", dir(path = ".",
+      #                   pattern = "\\.bib$",
+      #                   full.names = TRUE))
+print(bib)
+      if (downloadGrattex)  bibPath <- paste0("grattex-master/bib/", bib)
+      if (!downloadGrattex) bibPath <- paste0("bib/", bib)
 
-      bib2grattex(bib = bibpath.bib,
+
+      bib2grattex(bibName = bib,
+                  texName = "",
                   fromWord2grattex = TRUE)
+print(100)
+print(downloadGrattex)
+print(bib)
+print(bibPath)
+print(getwd())
+      file.copy(bib, bibPath)
+print(100)
+      file.remove(bib)
 
       # Read in again
       out_tex_lines <- read_lines("outtex.tex")
@@ -283,16 +295,16 @@ word2grattex <- function(path = ".",
       # Remove old "put-new-refs-here" file and replace with new
       if (downloadGrattex) {
         # tryCatch(file.remove("grattex-master/bib/put-new-refs-here.bib"))
-        file.rename(bibpath.bib, "grattex-master/bib/put-new-refs-here.bib")
+        file.rename(bibPath, "grattex-master/bib/put-new-refs-here.bib")
       }
       if (!downloadGrattex) {
         # tryCatch(file.remove("bib/put-new-refs-here.bib"))
-        file.rename(bibpath.bib, "bib/put-new-refs-here.bib")
+        file.rename(bibPath, "bib/put-new-refs-here.bib")
       }
     }
 
 
-
+    message("Your bib file has been renamed 'put-new-refs-here.bib' and is stored in the bib/ folder")
 
 
 # ---- Build Figure environments ---- #

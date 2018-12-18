@@ -10,23 +10,22 @@ library(tools)
     path = "./dontrun/data/test_w2g"
     overwrite = TRUE
     downloadGrattex = FALSE
-    removeReport.tex = TRUE
+    removeReport.tex = FALSE
     bibReplace = TRUE
     buildFigures = TRUE
     crossReferences = TRUE
     segmented = FALSE
     sobSectionName = ""
-    testRun = FALSE
+    testRun = TRUE
 
 
   # bib2grattex
-
-    path = "."
-    bibName =
-    texName =
-    fromWord2grattex = FALSE
+    # path = "."
+    bibName = "mybib"
+    texName = "mapping18"
+    fromWord2grattex = TRUE
     noBrackets = FALSE
     titleLength = 20
     variousYears     = c("multiple years", "Various years", "various years")
     ibid = TRUE
-    testRun = FALSE
+    testRun = TRUE
