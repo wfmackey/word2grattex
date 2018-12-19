@@ -277,39 +277,39 @@ bib2grattex <- function(path = ".",
     arrange(bibNumber)
 
 
-  # Pull required vectors
-  citeKey <- pull(findCitation, citeKey)
-  find1   <- pull(findCitation, findCitation1)
-  find2   <- pull(findCitation, findCitation2)
-  find3   <- pull(findCitation, findCitation3)
-  find4   <- pull(findCitation, findCitation4)
-  find5   <- pull(findCitation, findCitation5)
-  find6   <- pull(findCitation, findCitation6)
-  findbrackets1   <- pull(findCitation, findCitationBrackets1)
-  findbrackets2   <- pull(findCitation, findCitationBrackets2)
-  findbrackets3   <- pull(findCitation, findCitationBrackets3)
-  findbrackets4   <- pull(findCitation, findCitationBrackets4)
-  findbrackets5   <- pull(findCitation, findCitationBrackets5)
-  findbrackets6   <- pull(findCitation, findCitationBrackets6)
-  replace <- pull(findCitation, replaceCitation)
+    # Pull required vectors
+    citeKey <- pull(findCitation, citeKey)
+    find1   <- pull(findCitation, findCitation1)
+    find2   <- pull(findCitation, findCitation2)
+    find3   <- pull(findCitation, findCitation3)
+    find4   <- pull(findCitation, findCitation4)
+    find5   <- pull(findCitation, findCitation5)
+    find6   <- pull(findCitation, findCitation6)
+    findbrackets1   <- pull(findCitation, findCitationBrackets1)
+    findbrackets2   <- pull(findCitation, findCitationBrackets2)
+    findbrackets3   <- pull(findCitation, findCitationBrackets3)
+    findbrackets4   <- pull(findCitation, findCitationBrackets4)
+    findbrackets5   <- pull(findCitation, findCitationBrackets5)
+    findbrackets6   <- pull(findCitation, findCitationBrackets6)
+    replace <- pull(findCitation, replaceCitation)
 
-  # Replace/add citation key to .bib file for each bib entry
-  for (bib in 1:bibTotal) {
-    bib.all[bibNumber == bib] <- gsub("(\\@[a-zA-Z]*\\{)[0-9]*", paste0("\\1",citeKey[bib], ","), bib.all[bibNumber == bib])
-  }
+    # Replace/add citation key to .bib file for each bib entry
+    for (bib in 1:bibTotal) {
+      bib.all[bibNumber == bib] <- gsub("(\\@[a-zA-Z]*\\{)[0-9]*", paste0("\\1",citeKey[bib], ","), bib.all[bibNumber == bib])
+    }
 
-  # Write updated bib file
-  write_lines(bib.all, bibName)
+    # Write updated bib file
+    write_lines(bib.all, bibName)
 
 
 
   # ---- Replace in-text citations ---- #
   # if (fromWord2grattex)  texFile <- out_tex_lines
-  if ( fromWord2grattex) texFile <- read_lines("outtex.tex")
-  if (!fromWord2grattex) texFile <- read_lines(texName)
-
 
   citationSearch <- function(findNumber, brackets) {
+
+    if ( fromWord2grattex) texFile <- read_lines("outtex.tex")
+    if (!fromWord2grattex) texFile <- read_lines(texName)
 
     thisCurrent <- get(paste0("find", findNumber))[bib]
     thisReplace <- replace[bib]
@@ -321,9 +321,13 @@ bib2grattex <- function(path = ".",
 
     texFile <- gsub(thisCurrent, thisReplace, texFile, fixed = TRUE)
 
+    if ( fromWord2grattex) write_lines(texFile, "outtex.tex")
+    if (!fromWord2grattex) write_lines(texFile, texName)
+
+
   }
 
-
+  # Run over all bibs
   for (bib in 1:bibTotal) {
 
     for (num in 1:findNumberTotal) {
@@ -336,6 +340,9 @@ bib2grattex <- function(path = ".",
 
 
   # ---- ibid functionality ---- #
+  if ( fromWord2grattex) texFile <- read_lines("outtex.tex")
+  if (!fromWord2grattex) texFile <- read_lines(texName)
+
 
   if (ibid) {
     # Two processes:

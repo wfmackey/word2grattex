@@ -11,7 +11,7 @@ library(tools)
     overwrite = TRUE
     downloadGrattex = FALSE
     removeReport.tex = FALSE
-    bibReplace = FALSE
+    bibReplace = TRUE
     buildFigures = TRUE
     crossReferences = TRUE
     segmented = FALSE
@@ -21,8 +21,8 @@ library(tools)
 
   # bib2grattex
     # path = "."
-    bibName = "mybib"
-    texName = "mapping18"
+    # bibName = "mybib"
+    # texName = "mapping18"
     fromWord2grattex = TRUE
     noBrackets = FALSE
     titleLength = 20

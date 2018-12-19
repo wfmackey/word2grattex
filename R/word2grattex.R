@@ -303,7 +303,9 @@ word2grattex <- function(path = ".",
 
 
       # Read updated .tex file post-bib2grattex
+      message("Reading .tex file lines back in after bibReplacement")
       out_tex_lines <- read_lines("outtex.tex")
+
       # Drop temp file
       file.remove("outtex.tex")
 

@@ -7,5 +7,5 @@ devtools::load_all()
 
 path = "./dontrun/data/test_retirement"
 
-word2grattex(path = path, bibReplace = FALSE)
+word2grattex(path = path)
 
