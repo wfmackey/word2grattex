@@ -30,13 +30,9 @@ bib2grattex <- function(path = ".",
                         testRun = FALSE
                         ) {
 
-  findNumberTotal <- 6   #There are X find alternatives (this needs to be updated manually for now)
-
-
-  # Tidy path and bib if needed
+  # Tidy path if needed
   path = gsub("\\/$", "" , path)
-  if (!grepl("\\.bib$", bibName)) bibName = paste0(bibName, ".bib")
-  if (!grepl("\\.tex$", texName)) texName = paste0(texName, ".tex")
+
 
   # Preserving user's working directory
   if (!fromWord2grattex) {
@@ -45,9 +41,10 @@ bib2grattex <- function(path = ".",
   on.exit(setwd(current_wd))
   }
 
+
   # Lint the .bib file and read in lines
-  lint_bib(bibName)
-  bib.all <- read_lines(bibName)
+  lint_bib(paste0(path,"/",bibName))
+  bib.all <- read_lines(paste0(path,"/",bibName))
 
 
   # Remove existing key and create temporary unique ID
@@ -79,7 +76,7 @@ bib2grattex <- function(path = ".",
         ### if a year isn't found, set thisYear to "9999"
         if (identical(thisYear, character(0))) {
           thisYear = "9999"
-          print(paste0("Year not found for bib ", bib, ", using 9999 instead"))
+          message(paste0("Year not found for bib ", bib, ", using 9999 instead"))
           }
 
         ### Add to year list
@@ -90,6 +87,9 @@ bib2grattex <- function(path = ".",
         }
       }
 
+
+
+
       ## authorList
       for (bib in 1:bibTotal) {
 
@@ -99,13 +99,13 @@ bib2grattex <- function(path = ".",
           # If there are no authors, look for editors (Word uses editors for in-text ciation if no author is present)
           if (identical(thisAuthor, character(0))) {
             thisAuthor <- gsub(paste0(".*editor*?\\{([^\\}]*\\}?)\\}\\,"), "\\1", bib.all[(bibNumber == bib & grepl("^\\s*editor\\s*\\=", bib.all) == TRUE)])
-            if (!identical(thisAuthor, character(0))) print(paste0("Author not found for bib ", bib, ", using editor instead"))
+            if (!identical(thisAuthor, character(0))) message(paste0("Author not found for bib ", bib, ", using editor instead"))
 
             # If no author and no editor, use title (the case for Acts)
             if (identical(thisAuthor, character(0))) {
               thisAuthor <- gsub(paste0(".*title*?\\{([^\\}]*\\}?)\\}\\,"), "\\1", bib.all[(bibNumber == bib & grepl("^\\s*title\\s*\\=", bib.all) == TRUE)])
             }
-            if (!identical(thisAuthor, character(0))) print(paste0("Author not found for bib ", bib, ", using title instead (is this an Act? If not, there should be an author or editor)"))
+            if (!identical(thisAuthor, character(0))) message(paste0("Author not found for bib ", bib, ", using title instead (is this an Act? If not, there should be an author or editor)"))
           }
 
 
@@ -167,21 +167,14 @@ bib2grattex <- function(path = ".",
                                gsub("^([^,]*),.*", "\\1\\\\emph{, et al.}", findAuthor),
                                findAuthor)
 
-
-        ### ALT: Originally single brace THREE commas; extract the first three author names: "Norton, Cherastidtham and Mackey [variant 4]
+if (testRun) {
+        ### Originally single brace THREE commas; extract all three authors names (this is for documents that are not using Style of Quiet Achievers citation style)
         findAuthor4 <- ifelse( str_count(findAuthor, ",") == 3,
-                               gsub("^([^,]*),.*and\\s([^,]*).*and\\s([^,]*).*", "\\1, \\2 and \\3", findAuthor),
-                               findAuthor)
+                               gsub("^([^,]*),.*?and([^,]*),.*?and([^,]*).*", "\\1, \\2 and \\3 , findAuthor)",
+                               findAuthor))
 
-        ### ALT: Originally single brace FOUR commas; extract the first four author names: "Norton, Cherastidtham, Goss and Mackey [variant 4]
-        findAuthor5 <- ifelse( str_count(findAuthor, ",") == 4,
-                               gsub("^([^,]*),.*and\\s([^,]*).*and\\s([^,]*).*and\\s([^,]*).*", "\\1, \\2, \\3 and \\4", findAuthor),
-                               findAuthor)
+}
 
-        ### ALT: Originally single brace FIVE commas; extract the first five author names: "Norton, Cherastidtham, Goss, Chivers and Mackey [variant 4]
-        findAuthor6 <- ifelse( str_count(findAuthor, ",") == 5,
-                               gsub("^([^,]*),.*and\\s([^,]*).*and\\s([^,]*).*and\\s([^,]*).*and\\s([^,]*).*", "\\1, \\2, \\3, \\4 and \\5", findAuthor),
-                               findAuthor)
 
         ### authorKey: "Norton"
         authorKey <- ifelse(str_count(authorKey, ",") > 2,
@@ -202,7 +195,7 @@ bib2grattex <- function(path = ".",
         # If there is no title, send warning and set to ""
         if (identical(thisTitle, character(0))) {
           thisTitle <- ""
-          print(paste0("Title not found for bib ", bib, "!"))
+          message(paste0("Title not found for bib ", bib, "!"))
         }
 
         # Add to authorList
@@ -223,15 +216,12 @@ bib2grattex <- function(path = ".",
                               "findAuthor1"  = findAuthor1,
                               "findAuthor2"  = findAuthor2,
                               "findAuthor3"  = findAuthor3,
-                              "findAuthor4"  = findAuthor4,
-                              "findAuthor5"  = findAuthor5,
-                              "findAuthor6"  = findAuthor6,
                               "title"        = titleList,
                               "year"         = yearList,
                               "bibNumber"    = unique(bibNumber)    # BEFORE arrange
         ) %>%
 
-        # Sort order: AUTHOR, YEAR, TITLE  (as seen in docx formatting)
+        # Sort order: AUTHOR (as seen in text) YEAR, TITLE
         arrange(shortAuthor, year, title) %>%
         # Count number of obbservations by shortAuthor+year and generate yearCode
         group_by(shortAuthor, year) %>%
@@ -243,28 +233,13 @@ bib2grattex <- function(path = ".",
                                total  > 1 &  grepl("[0-9]{2,5}", year) ~ paste0(year, tempCode),
                                total  > 1 & !grepl("[0-9]{2,5}", year) ~ paste0(year, "-", tempCode) # exception for "multiple years" etc
                               ),
-        # Create findCite1:6 variables
+        # Create findCite1:3 variables
           findCitation1 = paste0(findAuthor1, " (", yearCode, ")"),
           findCitation2 = paste0(findAuthor2, " (", yearCode, ")"),
           findCitation3 = paste0(findAuthor3, " (", yearCode, ")"),
-          findCitation4 = paste0(findAuthor4, " (", yearCode, ")"),
-          findCitation5 = paste0(findAuthor5, " (", yearCode, ")"),
-          findCitation6 = paste0(findAuthor6, " (", yearCode, ")"),
-
-          # And create findCiteBrackets1:6 variables according to Cite Them Right 10th Edition, Harvard
-          findCitationBrackets1 = paste0("(", findAuthor1, ", ", yearCode, ")"),
-          findCitationBrackets2 = paste0("(", findAuthor2, ", ", yearCode, ")"),
-          findCitationBrackets3 = paste0("(", findAuthor3, ", ", yearCode, ")"),
-          findCitationBrackets4 = paste0("(", findAuthor4, ", ", yearCode, ")"),
-          findCitationBrackets5 = paste0("(", findAuthor5, ", ", yearCode, ")"),
-          findCitationBrackets6 = paste0("(", findAuthor6, ", ", yearCode, ")"),
 
         # Create Key variable
-          shortTitle = substr(title, 1, titleLength) %>%
-                        gsub("[[:punct:]]", "", .) %>%
-                        gsub("\\s", "", .) %>%
-                        tolower(.),
-
+          shortTitle = substr(title, 1, titleLength) %>% gsub("[[:punct:]]", "", .) %>% gsub("\\s", "", .) %>% tolower(.),
           citeKey    = case_when(grepl("[0-9]{2,5}", year) ~ paste0(authorKey, year, shortTitle),
                                 !grepl("[0-9]{2,5}", year) ~ paste0(authorKey, shortTitle)), # exception for "multiple years" etc
 
@@ -273,8 +248,7 @@ bib2grattex <- function(path = ".",
         ) %>%
 
         # Re-arrange according to bibNumber
-        ungroup() %>%
-        arrange(bibNumber)
+        ungroup() %>% arrange(bibNumber)
 
 
         # Pull required vectors
@@ -282,76 +256,48 @@ bib2grattex <- function(path = ".",
         find1   <- pull(findCitation, findCitation1)
         find2   <- pull(findCitation, findCitation2)
         find3   <- pull(findCitation, findCitation3)
-        find4   <- pull(findCitation, findCitation4)
-        find5   <- pull(findCitation, findCitation5)
-        find6   <- pull(findCitation, findCitation6)
-        findbrackets1   <- pull(findCitation, findCitationBrackets1)
-        findbrackets2   <- pull(findCitation, findCitationBrackets2)
-        findbrackets3   <- pull(findCitation, findCitationBrackets3)
-        findbrackets4   <- pull(findCitation, findCitationBrackets4)
-        findbrackets5   <- pull(findCitation, findCitationBrackets5)
-        findbrackets6   <- pull(findCitation, findCitationBrackets6)
         replace <- pull(findCitation, replaceCitation)
 
-        # Replace/add citation key to .bib file for each bib entry
+        # Replace/add citation key to .bib file
         for (bib in 1:bibTotal) {
           bib.all[bibNumber == bib] <- gsub("(\\@[a-zA-Z]*\\{)[0-9]*", paste0("\\1",citeKey[bib], ","), bib.all[bibNumber == bib])
         }
 
         # Write updated bib file
-        write_lines(bib.all, bibName)
+        write_lines(bib.all, paste0(path,"/", bibName))
 
 
 
 # ---- Replace in-text citations ---- #
         # if (fromWord2grattex)  texFile <- out_tex_lines
         if ( fromWord2grattex) texFile <- read_lines("outtex.tex")
-        if (!fromWord2grattex) texFile <- read_lines(texName)
-
-
-        citationSearch <- function(findNumber, brackets) {
-
-          thisCurrent <- get(paste0("find", findNumber))[bib]
-          thisReplace <- replace[bib]
-
-          if (findNumber == 1 & !brackets) {
-            message(paste0("Replacing ", thisCurrent, " with ", thisReplace))
-            message(paste0("   And looking for/replacing a few variations on ", thisCurrent))
-          }
-
-          texFile <- gsub(thisCurrent, thisReplace, texFile, fixed = TRUE)
-
-        }
+        if (!fromWord2grattex) texFile <- read_lines(paste0(path,"/", texName))
 
 
         for (bib in 1:bibTotal) {
-
-          for (num in 1:findNumberTotal) {
-
-            citationSearch(findNumber = num, brackets = FALSE)
-            citationSearch(findNumber = num, brackets = TRUE)
-
-          }
+          message(paste0("Replacing ", find1[bib], " with ", replace[bib]))
+          texFile <- gsub(find1[bib], replace[bib], texFile, fixed = TRUE)
+          texFile <- gsub(find2[bib], replace[bib], texFile, fixed = TRUE)
+          texFile <- gsub(find3[bib], replace[bib], texFile, fixed = TRUE)
         }
 
 
-# ---- ibid functionality ---- #
+        # ---- ibid functionality ---- #
 
-  if (ibid) {
-    # Two processes:
-      ## one line process (via simple gsub)
-    texFile <- gsub("(.*textcite.*?\\{([a-zA-Z0-9]*)\\}.*?)(?:i|I)bid\\.?",
-                    "\\1\\\\textcite[][]\\{\\2\\}",
-                    texFile)
+if (ibid) {
+  # Two processes:
+    ## one line process (via simple gsub)
+  texFile <- gsub("(.*textcite.*?\\{([a-zA-Z0-9]*)\\}.*?)(?:i|I)bid\\.?",
+                  "\\1\\\\textcite[][]\\{\\2\\}",
+                  texFile)
 
-      ## multi-line process (harder --> might need to number)
-      ## tbd, see issue #2
-
+    ## multi-line process (harder --> might need to number)
 
 
-  }
 
-# ---- Managing textcites; creating footcites ---- #
+}
+
+    # ---- Managing textcites; creating footcites ---- #
 
         # Remove \emph from texcites in footnotes: if \emph surrounds a \textcite, remove it
         texFile <- gsub("\\\\emph\\{(\\\\textcite\\[\\]\\[\\]\\{[^\\}]*\\})\\}",
@@ -452,7 +398,7 @@ bib2grattex <- function(path = ".",
 
 
 
-message("End of bib2grattex")
+
 
 }   # end function
 

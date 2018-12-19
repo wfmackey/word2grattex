@@ -1,6 +1,8 @@
 inst/doc
 .Rproj.user
+dontrun/data
 dontrun/data/test_w2g/
+dontrun/data/test_retirement/
 README.html
 .DS_Store
 dontrun/data/test_w2g/bib/put-new-refs-here.bib

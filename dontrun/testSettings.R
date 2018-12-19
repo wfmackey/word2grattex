@@ -7,16 +7,16 @@ library(tools)
 # Test settings
 
   # word2grattex
-    path = "./dontrun/data/test_w2g"
+    path = "./dontrun/data/test_retirement"
     overwrite = TRUE
     downloadGrattex = FALSE
     removeReport.tex = FALSE
-    bibReplace = TRUE
+    bibReplace = FALSE
     buildFigures = TRUE
     crossReferences = TRUE
     segmented = FALSE
     sobSectionName = ""
-    testRun = TRUE
+    testRun = FALSE
 
 
   # bib2grattex
@@ -28,4 +28,4 @@ library(tools)
     titleLength = 20
     variousYears     = c("multiple years", "Various years", "various years")
     ibid = TRUE
-    testRun = TRUE
+    testRun = FALSE

@@ -5,7 +5,8 @@
 #' @param downloadGrattex Download the most recent version of Grattex. Set to TRUE if the Word document is not located within a Grattex folder.
 #' @param removeReport.tex Delete the default Grattex .tex file.
 #' @param bibReplace Add in-text citations using bib2grattex.
-#' @param buildFigures Automatically build figure environments.
+#' @param buildFigures Automatically build figure environments with titles, units, \includegraphics, notes and sources.
+#' @param buildTables Automatically build table environments to enable table cross-referencing. Note that this does _not_ build the table itself.
 #' @param crossReferences Automatically create cross-references. Eg: “See Section 2.2” to "See \Cref{subsec:section-name}".
 #' @param segmented Set to TRUE if this is just a chapter or section of a larger document.
 #' @param sobSectionName Set to TRUE if State Orange Book section names are desired.
@@ -25,6 +26,7 @@ word2grattex <- function(path = ".",
                          removeReport.tex = TRUE,
                          bibReplace = TRUE,
                          buildFigures = TRUE,
+                         buildTables = TRUE,
                          crossReferences = TRUE,
                          segmented = FALSE,
                          sobSectionName = "",
@@ -32,10 +34,15 @@ word2grattex <- function(path = ".",
                          ) {
 
 
-# ---- Convert Word document to .tex using pandoc ---- #
+# ---- If bibReplace is requested, make sure there is a bib file
+  isBibHere <- dir(path = path, pattern = "\\.bib$", full.names = TRUE)
 
+  if (bibReplace & identical(isBibHere, character(0))) stop(paste0("Oop -- you asked for bibReplace, but I can't find a .bib file in ", path))
+
+
+# ---- Convert Word document to .tex using pandoc ---- #
   if (!nzchar(Sys.which("pandoc"))) {
-    stop("pandoc not found on the system path.")
+    stop("pandoc not found on the system path. :/ See https://pandoc.org/installing.html to download it.")
   }
 
   current_wd <- getwd()
@@ -44,7 +51,7 @@ word2grattex <- function(path = ".",
 
 # ---- Download grattex template ---- #
   ##-- only for testing; actual conversions should take place within a GitHub clone of grattex ##
-
+  message("Looking for or downloading Grattex")
   # Get grattex
   if (downloadGrattex) {
     download.file(url ="https://github.com/HughParsonage/grattex/archive/master.zip",
@@ -58,6 +65,8 @@ word2grattex <- function(path = ".",
 # ---- Convert Word document in path ---- #
 
   # Search for Word document
+  message(paste0("Looking for Word document in ", path))
+
   file.docx <- dir(path = ".",
                    pattern = "\\.docx$",
                    full.names = TRUE)
@@ -86,6 +95,7 @@ word2grattex <- function(path = ".",
   }
 
   # Convert using pandoc via bash
+  message(paste0("Converting .docx to .tex using Pandoc"))
   if (tolower(.Platform$OS.type) == "windows") {
     shell(sprintf("pandoc --wrap=none --top-level=chapter -s %s -o %s", file.docx, out.tex))
   } else {
@@ -96,10 +106,12 @@ word2grattex <- function(path = ".",
 # ---- Read tex lines and set construct report framework ---- #
 
   # Read lines from pandoc output
+  message(paste0("Reading .tex lines for processing"))
   out_tex_lines <- read_lines(out.tex)
 
 
   # Drop preamble and system chapters (Overview, Contents, Figures, Tables, Recommendations)
+  message(paste0("Bulding a more ~Grattan-style~ .tex file"))
   ## Is there a preamble/system chapters?
   if (max(grepl("\\\\chapter\\{(Overview|Contents|Figures|Tables|Recommendations)", out_tex_lines)) > 0) {
 
@@ -158,6 +170,7 @@ word2grattex <- function(path = ".",
 
 
 # ---- Clean up pandoc conversion annoyances
+  message(paste0("Cleaning up after the messy Pandoc conversion"))
 
   # Remove numbers from sections and subsections
   out_tex_lines <- gsub("\\\\section\\{\\s*[0-9]\\.[0-9](.*?)\\}", "\\\\section{\\1}", out_tex_lines)
@@ -169,11 +182,12 @@ word2grattex <- function(path = ".",
   # Remove \protect\hypertarget{}{...}
   out_tex_lines <- gsub("\\\\protect\\\\hypertarget\\{[A-z0-9\\_\\(\\-]*\\}\\{([A-z0-9\\_\\(\\-]*)\\}\\{([A-z0-9\\_\\(\\-]*)\\}", "\\1\\2", out_tex_lines)
 
-
-
   # Remove \protect\hyperlink{}{...}
   out_tex_lines <- gsub("\\\\protect\\\\hyperlink\\{.*?\\}\\{(.*?)\\}", "\\1", out_tex_lines)
-
+  # This is where an issue with multi-citation lines occurs.
+  # Dumb fix?: if "XXXXX (YYYY}" -- replace with "XXXXX (YYYY);"?
+  # I think this is beacuse of an update to Word?????
+  # ie
 
   # Remove \texorpdfstring.
   ##  This can infect its own line and next. Eg:
@@ -229,16 +243,21 @@ word2grattex <- function(path = ".",
   out_tex_lines <- gsub("\\\\section\\{\\}\\\\label.*", "", out_tex_lines)  # section is default label
   out_tex_lines <- gsub("\\\\subsection\\{\\}\\\\label.*", "", out_tex_lines)  # section is default label
 
-
   # Add "\appendix" line
     # find the earliest Chapter title that contains "Appendix", and add "\\appendix" to the preceding line
-    if (max(grepl(             "\\chapter\\{[[:print:]]*Appendix[[:print:]]*", out_tex_lines))) {
+    appendixSearch <- "\\chapter\\{[[:print:]]*Appendix[[:print:]]*"
 
-        out_tex_lines[min(grep("\\chapter\\{[[:print:]]*Appendix[[:print:]]*", out_tex_lines)) - 1] <- "\\appendix"
+    if (max(grepl(appendixSearch, out_tex_lines))) {
+
+        message(paste0("Appendix found -- adding \\appendix tag"))
+
+        out_tex_lines[min(grep(appendixSearch, out_tex_lines)) - 1] <- "\\appendix"
     }
 
 
   # Replace ie and etc with \ie and \etc
+  message(paste0("Replacing ie, etc with the proper \\ie and \\etc"))
+
   out_tex_lines <- gsub("(E|e)tc\\.\\s?", "\\\\etc ", out_tex_lines)  # this is unlikely to cause issue: http://www.thefreedictionary.com/words-that-end-in-etc
   out_tex_lines <- gsub("(I|i)\\.e\\.\\s?", "\\\\ie ", out_tex_lines)
   out_tex_lines <- gsub("([\\s\\(]{1})(I|i)e\\.\\s?" , "\\1\\\\ie ", out_tex_lines) # only look for _ie. or (ie. to avoid natural words ending in ie (eg chippie.)
@@ -254,7 +273,7 @@ word2grattex <- function(path = ".",
     tomaster.tex <- paste0("grattex-master/",substring(out.tex,3))
 
     if (bibReplace) {
-      message("Fixing references")
+      message("Adding in-text citations from the .bib file")
 
 
       # Write tex file temporarily
@@ -310,17 +329,24 @@ word2grattex <- function(path = ".",
   numberOfFigures <- sum(grepl("\\\\includegraphics", out_tex_lines))
 
   # Add graphics or comment out:
-  if (!buildFigures) out_tex_lines <- gsub("\\\\includegraphics", "\\%\\%\\\\includegraphics", out_tex_lines)
+  if (!buildFigures) {
+    message("Not building figure environments")
+    out_tex_lines <- gsub("\\\\includegraphics", "\\%\\%\\\\includegraphics", out_tex_lines)
+  }
+
 
   if (buildFigures) {
 
+    message("Building figure environments")
 
     # Look for a PDF file; if none use default "chartdeck.pdf"
     chartspath <- dir(path = ".", pattern = "\\.pdf$", full.names = TRUE)
     if (length(chartspath) == 0) {
+      message("No chart pack .pdf found, using chartpack.pdf in the \\includegraphics call")
       charts.pdf <- "chartdeck.pdf"
     } else {
       charts.pdf <- substring(chartspath, 3)
+      message(paste0("Chart pack .pdf found, using ", charts.pdf, " in the \\includegraphics call"))
     }
 
 
@@ -356,14 +382,16 @@ word2grattex <- function(path = ".",
       counter = counter + 1
 
       # only perform if Figure: is found and there is no collision; otherwise just comment out
-      if (found.fig==TRUE & collision==FALSE) {
+      if (found.fig == TRUE & collision == FALSE) {
 
         # Extract figure text
         figtext  <- gsub("Figure\\s[\\.0-9]{0,3}\\:\\s?", "" , out_tex_lines[l-fig])
+
         # Remove any wayward \\
         figtext <- gsub("\\\\\\\\", "" , figtext)
 
-        out_tex_lines[l-fig] <- ""  # remove figure text from original position
+        # Remove figure text from original position
+        out_tex_lines[l-fig] <- ""
 
         figlabel <- tolower(gsub("[[:punct:]]", "" , figtext))
         figlabel <- gsub("\\s", "-", figlabel)
@@ -374,10 +402,12 @@ word2grattex <- function(path = ".",
         ## Units sometimes precede includegraphics on the same line; move to preceding line
         ## Test for graphical characters before \\includegraphics and move them down a line if found
         if(grepl("[[:graph:]]+\\s?\\\\includegraphics", out_tex_lines[l])) {
+
           moveup <- gsub("([[:graph:]]+)\\s?\\\\.*", "\\1", out_tex_lines[l])
           moveline <- 1
           out_tex_lines[l-moveline] <- moveup
           out_tex_lines[l] <- gsub("([[:print:]]+)(\\\\.*)", "\\2", out_tex_lines[l])
+
         }
 
         ## Units can take up two lines, meaning 'Figure' is 7 lines above
@@ -386,11 +416,13 @@ word2grattex <- function(path = ".",
         unittext <-  paste0(unitblock[grep("[[:graph:]]+",unitblock)], collapse = ". ")
 
         # Notes or sources sometimes procede includegraphics on the same line
-        if(grepl("(Notes)|(Source)\\:(.*)", out_tex_lines[l])) {
+        if(grepl("(Notes)|(Source)\\:", out_tex_lines[l])) {
+
           out_tex_lines[l+1] <- gsub("\\\\includegraphics.*((Notes)|(Source).*)", "\\1", out_tex_lines[l])
-          out_tex_lines[l] <- "" # noting that we don't actually need the original includegraphics line
+          out_tex_lines[l] <- "" # We don't need the original includegraphics line, good to remove
           # out_tex_lines[l+1] <- gsub(".*(emf\\})?(.*)", "\\2", out_tex_lines[l])
           # out_tex_lines[l]   <- gsub("(.*)(emf\\}).*", "\\1", out_tex_lines[l])
+
         }
 
         # Set includegraphics line
@@ -410,7 +442,6 @@ word2grattex <- function(path = ".",
           sourceline <- 0
 
         }
-        sourceline
 
         source   <- ifelse(sourceline>0, "source", "")
         source.s <- ifelse(grepl("Sources\\:", out_tex_lines[l+sourceline]), "s", "")
@@ -441,6 +472,8 @@ word2grattex <- function(path = ".",
           sourcetext <- gsub("Sources?\\:\\s?", "", sourcetext)
           sourcetext <- gsub("\\\\\\\\", "", sourcetext)
           out_tex_lines[l+sourceline] <- ""
+        } else {
+          sourcetext = "#####NO SOURCE FOUND#####"
         }
 
         if (noteline>0) {
@@ -451,19 +484,28 @@ word2grattex <- function(path = ".",
           notetext <- gsub("Notes?\\:\\s?", "", notetext)
           notetext <- gsub("\\\\\\\\", "", notetext)
           out_tex_lines[l+noteline] <- ""
+        } else {
+          notetext = "#####NO NOTES FOUND#####"
         }
 
         # Build figure environment
         if (fig == 2) start = 3 else start = 4
         if (grepl("[[:print:]]", out_tex_lines[(fig + start)])) start = start-1
 
+        message(paste0("Building original figure ", counter,
+                       "\n   with title ", figtext,
+                       "\n   (and hence label ", figlabel, ")",
+                       "\n   units of ", if (unittext == "") "#####NO UNITS FOUND#####" else unittext, ","),
+                       "\n   notes of ", notetext, ",",
+                       "\n   source of ", sourcetext)
+
         out_tex_lines[l-(start)] <-     paste0("    \\begin{figure} %% original Figure ", counter)
         out_tex_lines[l-(start-1)] <-   paste0("    \\caption{",figtext,"}\\label{", figlabel, "}")
         out_tex_lines[l-(start-2)] <-   paste0("    \\units{",unittext,"}")
         out_tex_lines[l-(start-3)] <-   paste0("    ", includegraphics)
-        if (noteline>0  & sourceline>0 )  out_tex_lines[l-(start-4)] <- paste0("    \\",subcom,"{",notetext,"}{", sourcetext, "}")
-        if (noteline==0 & sourceline>0 )  out_tex_lines[l-(start-4)] <- paste0("    \\",subcom,"{",sourcetext, "}")
-        if (noteline>0  & sourceline==0)  out_tex_lines[l-(start-4)] <- paste0("    \\",subcom,"{",notetext, "}")
+        if (noteline >  0  & sourceline  > 0)  out_tex_lines[l-(start-4)] <- paste0("    \\",subcom,"{",notetext,"}{", sourcetext, "}")
+        if (noteline == 0  & sourceline  > 0)  out_tex_lines[l-(start-4)] <- paste0("    \\",subcom,"{",sourcetext, "}")
+        if (noteline >  0  & sourceline == 0)  out_tex_lines[l-(start-4)] <- paste0("    \\",subcom,"{",notetext, "}")
         out_tex_lines[l-(start-5)] <- "    \\end{figure}"
 
       } # end  if (found.fig==TRUE & collision==FALSE) {
@@ -474,7 +516,8 @@ word2grattex <- function(path = ".",
       }
 
 
-      if (counter == 1) figRefs <- figlabel else figRefs <- c(figRefs, figlabel)
+      if (counter == 1) figRefs <- figlabel
+      if (counter >  1) figRefs <- c(figRefs, figlabel)
 
 
     } # end loop over graphics lines
@@ -504,20 +547,40 @@ word2grattex <- function(path = ".",
 # ---- Build Table environments ---- #
 
   # Building Table environment
-  table.environments <- TRUE
+
   # Loop over all lines with \begin{longtable} to build Table environments
-  if (table.environments) {
-    for (l in grep("\\\\begin\\{longtable\\}", out_tex_lines)) {
+  if (buildTables) {
+    message("Building table environments (to enable cross-references)")
+    counter = 0
+
+    tableSearch <- "\\\\begin\\{longtable\\}"
+
+    numberOfTables <- sum(grepl(tableSearch, out_tex_lines))
+
+    for (l in grep(tableSearch, out_tex_lines)) {
+
+      counter = counter + 1
 
       # Find the "Table" line above includegraphics
-      tab <- max(grep("^\\s?Table[[:print:]]{0,20}\\:(.*)", out_tex_lines[(l-8):(l-1)]))
+      tab <- suppressWarnings(max(grep("^\\s?Table[[:print:]]{0,20}\\:(.*)", out_tex_lines[(l-8):(l-1)])))
       tab <- 9 - tab
-      if (!tab==Inf) {
+      if (!tab == Inf) {
         # Get table caption text
         tabletext <- gsub("^\\s?Table[[:print:]]{0,20}\\:\\s?(.*)", "\\1", out_tex_lines[l-tab])
 
+        # Create table label
+        tablelabel <- tolower(gsub("[[:punct:]]", "" , tabletext))
+        tablelabel <- gsub("\\s", "-", tablelabel)
+        tablelabel <- paste0("tbl:", tablelabel)
+
         # Open the table environment and add caption (on the same line, to be safe)
-        out_tex_lines[(l-(tab))] <- paste0("\\begin{table} \\caption{", tabletext, "}")
+        out_tex_lines[(l-(tab))] <- paste0("\\begin{table}",
+                                           "\\caption{", tabletext, "}",
+                                           "\\label{", tablelabel, "}")
+
+        # add to tabRefs to allow replacement
+        if (counter == 1) tabRefs <- tablelabel
+        if (counter >  1) tabRefs <- c(tabRefs, tablelabel)
 
         # find the closing longtable line
         close <- min(grep("\\\\end\\{longtable\\}" , out_tex_lines[l:length(out_tex_lines)]))
@@ -526,8 +589,15 @@ word2grattex <- function(path = ".",
         out_tex_lines[l+(close+1)] <- "\\end{table}"
       }
 
+    }  # end table loop
+
+    # Replace in-text Figure references with cross-references
+    for (t in 1:numberOfTables) {
+      out_tex_lines <- gsub(paste0("Tables?\\s?", t,"([^0-9])"), paste0("\\\\Cref\\{", tabRefs[t], "\\}\\1"), out_tex_lines)
     }
-  }
+
+
+  } # end buildTable condition
 
 
 
@@ -545,30 +615,28 @@ if (crossReferences) {
   out_tex_lines <- gsub("(\\\\subsection\\{[^\\}]*\\}\\\\label\\{)([^\\}]*)\\}","\\1subsec\\:\\2\\}", out_tex_lines)
   out_tex_lines <- gsub("(\\\\subsubsection\\{[^\\}]*\\}\\\\label\\{)([^\\}]*)\\}","\\1subsubsec\\:\\2\\}", out_tex_lines)
 
-  if (testRun) {
-  # PLANNED:
-  # identifty headers
-  headers      <- c("chapter", "section", "subsection", "subsubsection")
-  shortHeaders <- c("chap"   , "sec"    , "subsec",     "subsubsec"    )
-    ## for...
+              if (testRun) {
+                # PLANNED:
+                # identifty headers
+                headers      <- c("chapter", "section", "subsection", "subsubsection")
+                shortHeaders <- c("chap"   , "sec"    , "subsec",     "subsubsec"    )
+                  ## for...
 
-    ## for each header line
-header      <- headers[2]
-shortHeader <- shortHeaders[2]
-out_tex_lines[51]
-l <- 51
-      ### pull out header title and create chapter-specific label
-      thisHeader <- gsub(paste0("\\\\",header,"\\{([^\\}]*)\\}\\\\label.*"),"\\1", out_tex_lines[l])
-      thisHeaderLabel <- gsub("[[:punct:]]", "", thisHeader)
-      thisHeaderLabel <- paste0(shortHeader, ":", gsub("\\s", "-", tolower(thisHeader)))
-      if (sobSectionName != "") thisHeaderLabel <- paste0(thisHeaderLabel, "-", sobSectionName)
-      ### sub in label
-      out_tex_lines[l] <- gsub(paste0("\\\\",header,"\\{([^\\}]*)\\}\\\\label.*"),"\\1", out_tex_lines[l])
+                ## for each header line
+                header      <- headers[2]
+                shortHeader <- shortHeaders[2]
+                out_tex_lines[51]
+                l <- 51
 
+                  ### pull out header title and create chapter-specific label
+                  thisHeader <- gsub(paste0("\\\\",header,"\\{([^\\}]*)\\}\\\\label.*"),"\\1", out_tex_lines[l])
+                  thisHeaderLabel <- gsub("[[:punct:]]", "", thisHeader)
+                  thisHeaderLabel <- paste0(shortHeader, ":", gsub("\\s", "-", tolower(thisHeader)))
+                  if (sobSectionName != "") thisHeaderLabel <- paste0(thisHeaderLabel, "-", sobSectionName)
+                  ### sub in label
+                  out_tex_lines[l] <- gsub(paste0("\\\\",header,"\\{([^\\}]*)\\}\\\\label.*"),"\\1", out_tex_lines[l])
 
-
-
-  }
+              }
 
 
 
