@@ -4,4 +4,5 @@ cache: packages
 warnings_are_errors: false
 
 install:
+- R -e 'install.packages("devtools")'
 - R -e 'devtools::install_github("HughParsonage/grattanReporter")'
