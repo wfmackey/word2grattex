@@ -2,3 +2,6 @@ language: R
 sudo: false
 cache: packages
 warnings_are_errors: false
+
+install:
+- R -e 'devtools::install_github("HughParsonage/grattanReporter")'
