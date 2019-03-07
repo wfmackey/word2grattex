@@ -5,18 +5,20 @@
 #' @param downloadGrattex Download the most recent version of Grattex. Set to TRUE if the Word document is not located within a Grattex folder.
 #' @param removeReport.tex Delete the default Grattex .tex file.
 #' @param bibReplace Add in-text citations using bib2grattex.
-#' @param buildFigures Automatically build figure environments with titles, units, \includegraphics, notes and sources.
+#' @param buildFigures Automatically build figure environments with titles, units, \\includegraphics, notes and sources.
 #' @param buildTables Automatically build table environments to enable table cross-referencing. Note that this does _not_ build the table itself.
-#' @param crossReferences Automatically create cross-references. Eg: “See Section 2.2” to "See \Cref{subsec:section-name}".
+#' @param crossReferences Automatically create cross-references. Eg: “See Section 2.2” to "See \\Cref{subsec:section-name}".
 #' @param segmented Set to TRUE if this is just a chapter or section of a larger document.
 #' @param sobSectionName Set to TRUE if State Orange Book section names are desired.
 #' @param testRun To test new features of word2grattex. Leave as FALSE.
-#' @examples
-#' \dontrun{
-#' library(word2grattex)
-#' word2grattex(path = path/to/worddoc/folder)
-#' }
+#'
+#' @importFrom readr read_lines write_lines
+#' @importFrom stringr str_split
+#' @importFrom utils download.file unzip
+#'
 #' @export
+#'
+#'
 
 
 

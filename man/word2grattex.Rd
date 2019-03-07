@@ -5,9 +5,9 @@
 \title{Convert a Grattan report-style Word document to .tex}
 \usage{
 word2grattex(path = ".", overwrite = TRUE, downloadGrattex = FALSE,
-  removeReport.tex = TRUE, bibReplace = FALSE, buildFigures = TRUE,
-  crossReferences = TRUE, segmented = FALSE, sobSectionName = "",
-  testRun = FALSE)
+  removeReport.tex = TRUE, bibReplace = TRUE, buildFigures = TRUE,
+  buildTables = TRUE, crossReferences = TRUE, segmented = FALSE,
+  sobSectionName = "", testRun = FALSE)
 }
 \arguments{
 \item{path}{The path of the folder containing your Word document.}
@@ -20,9 +20,11 @@ word2grattex(path = ".", overwrite = TRUE, downloadGrattex = FALSE,
 
 \item{bibReplace}{Add in-text citations using bib2grattex.}
 
-\item{buildFigures}{Automatically build figure environments.}
+\item{buildFigures}{Automatically build figure environments with titles, units, \\includegraphics, notes and sources.}
 
-\item{crossReferences}{Automatically create cross-references. Eg: “See Section 2.2” to "See \Cref{subsec:section-name}".}
+\item{buildTables}{Automatically build table environments to enable table cross-referencing. Note that this does _not_ build the table itself.}
+
+\item{crossReferences}{Automatically create cross-references. Eg: “See Section 2.2” to "See \\Cref{subsec:section-name}".}
 
 \item{segmented}{Set to TRUE if this is just a chapter or section of a larger document.}
 
@@ -32,10 +34,4 @@ word2grattex(path = ".", overwrite = TRUE, downloadGrattex = FALSE,
 }
 \description{
 Convert a Grattan report-style Word document to .tex
-}
-\examples{
-\dontrun{
-library(word2grattex)
-word2grattex(path = path/to/worddoc/folder)
-}
 }

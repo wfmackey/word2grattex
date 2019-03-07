@@ -1,4 +1,4 @@
-#' Convert Word in-text citations to LaTeX \Cref citations using a .bib file.
+#' Convert Word in-text citations to LaTeX \\Cref citations using a .bib file.
 #'
 #' @param path The path of the folder containing your Word document.
 #' @param bibName The name of the .bib file containing all bib entries.
@@ -8,12 +8,24 @@
 #' @param variousYears Phrases that have been used to denote various years (in place of a numerical year within the in-text citation).
 #' @param ibid Search for instances of 'ibid' and replace citation with most recent citation. This _only_ works when "ibid" is in the same paragraph as the most recent citation.
 #' @param testRun To test new features of word2grattex. Leave as FALSE.
-#' @examples
-#' \dontrun{
-#' library(word2grattex)
-#' bib2grattex(path = path/to/worddoc/folder, bibName = "mybib.bib", texName = "myReport.tex")
-#' }
+#'
+#' @importFrom grattanReporter lint_bib
+#' @importFrom readr read_lines write_lines
+#' @importFrom stringr str_count
+#' @import dplyr
+#'
 #' @export
+#'
+#'
+
+## Define global variables (from word2grattex)
+globalVariables(c(".", "findCitation1", "findCitation2", "findCitation3", "findCitation4",
+                  "findCitation5", "findCitation6", "findCitationBrackets1", "findCitationBrackets2",
+                  "findCitationBrackets3", "findCitationBrackets4", "findCitationBrackets5",
+                  "findCitationBrackets6", "replaceCitation", "shortAuthor",
+                  "title", "year", "yearCode"))
+
+
 
 # This function requires the yearcode of the bib file to MATCH the year code of the Word reference list.
 # this isn't _really_ ideal; but is the system for the time being.
@@ -23,7 +35,6 @@ bib2grattex <- function(path = ".",
                         bibName,
                         texName,
                         fromWord2grattex = FALSE,
-                        noBrackets = FALSE,
                         titleLength = 20,
                         variousYears     = c("multiple years", "Various years", "various years"),
                         ibid = TRUE,
