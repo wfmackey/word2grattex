@@ -39,12 +39,15 @@ word2grattex <- function(path = ".",
 # ---- If bibReplace is requested, make sure there is a bib file
   isBibHere <- dir(path = path, pattern = "\\.bib$", full.names = TRUE)
 
-  if (bibReplace & identical(isBibHere, character(0))) stop(paste0("Oop -- you asked for bibReplace, but I can't find a .bib file in ", path))
+  if (bibReplace & identical(isBibHere, character(0))) {
+    stop(paste0("Oop -- you asked for bibReplace, but I can't find a .bib file in ", path))
+    }
+
 
 
 # ---- Convert Word document to .tex using pandoc ---- #
   if (!nzchar(Sys.which("pandoc"))) {
-    stop("pandoc not found on the system path. :/ See https://pandoc.org/installing.html to download it.")
+    stop("pandoc not found on the system path. See https://pandoc.org/installing.html to download it.")
   }
 
   current_wd <- getwd()
