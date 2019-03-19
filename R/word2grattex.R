@@ -303,8 +303,6 @@ word2grattex <- function(path = ".",
 
       # Move bib file to ./bib folder
       file.copy(bib, bibPath)
-      # Drop duplicate
-      file.remove(bib)
 
 
       # Read updated .tex file post-bib2grattex
@@ -541,7 +539,6 @@ word2grattex <- function(path = ".",
       if (downloadGrattex)     file.copy(chartspath, paste0("grattex-master/atlas/",charts.pdf))
       if (!downloadGrattex)    file.copy(chartspath, paste0("atlas/",charts.pdf))
 
-      file.remove(chartspath)
     }
 
 
