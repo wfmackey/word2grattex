@@ -9,7 +9,6 @@
 #' @param buildTables Automatically build table environments to enable table cross-referencing. Note that this does _not_ build the table itself.
 #' @param crossReferences Automatically create cross-references. Eg: “See Section 2.2” to "See \\Cref{subsec:section-name}".
 #' @param segmented Set to TRUE if this is just a chapter or section of a larger document.
-#' @param sobSectionName Set to TRUE if State Orange Book section names are desired.
 #' @param testRun To test new features of word2grattex. Leave as FALSE.
 #'
 #' @importFrom readr read_lines write_lines
@@ -31,45 +30,19 @@ word2grattex <- function(path = ".",
                          buildTables = TRUE,
                          crossReferences = TRUE,
                          segmented = FALSE,
-                         sobSectionName = "",
                          testRun = FALSE
                          ) {
 
 
-# ---- If bibReplace is requested, make sure there is a bib file
-  isBibHere <- dir(path = path, pattern = "\\.bib$", full.names = TRUE)
+# Pre-run checks ------------------------------------------------------------------------------------------------
 
-  if (bibReplace & identical(isBibHere, character(0))) {
-    stop(paste0("Oop -- you asked for bibReplace, but I can't find a .bib file in ", path))
-    }
-
-
-
-# ---- Convert Word document to .tex using pandoc ---- #
+# Check for pandoc ----
   if (!nzchar(Sys.which("pandoc"))) {
     stop("pandoc not found on the system path. See https://pandoc.org/installing.html to download it.")
   }
 
-  current_wd <- getwd()
-  setwd(normalizePath(path.expand(path)))
-  on.exit(setwd(current_wd))
 
-# ---- Download grattex template ---- #
-  ##-- only for testing; actual conversions should take place within a GitHub clone of grattex ##
-  message("Looking for or downloading Grattex")
-  # Get grattex
-  if (downloadGrattex) {
-    download.file(url ="https://github.com/HughParsonage/grattex/archive/master.zip",
-                  destfile = "grattex.zip" )
-    # unzip the .zip file
-    unzip(zipfile = "grattex.zip")
-    file.remove("grattex.zip")
-  }
-
-
-# ---- Convert Word document in path ---- #
-
-  # Search for Word document
+# Search for Word document
   message(paste0("Looking for Word document in ", path))
 
   file.docx <- dir(path = ".",
@@ -90,6 +63,24 @@ word2grattex <- function(path = ".",
     }
   }
 
+  # If bibReplace is requested, make sure there is a bib file ----
+  isBibHere <- dir(path = path, pattern = "\\.bib$", full.names = TRUE)
+
+  if (bibReplace & identical(isBibHere, character(0))) {
+    stop(paste0("Oop -- you asked for bibReplace, but I can't find a .bib file in ", path))
+    }
+
+
+
+
+# Set up directories and file names------------------------------------------------------------------------------------
+
+  # Set working directory
+  current_wd <- getwd()
+  setwd(normalizePath(path.expand(path)))
+  on.exit(setwd(current_wd))
+
+
   # Generate name for .tex file
   out.tex <- sprintf("%s.tex", tools::file_path_sans_ext(file.docx))
 
@@ -99,21 +90,60 @@ word2grattex <- function(path = ".",
     stop("`overwrite = FALSE` but `", out.tex, "` is present in `path`.")
   }
 
+  # Search for Report.tex for preamble
+  if (!file.exists("Report.tex")) {
+    # Download and add current Grattex preamble if not present
+    download.file(url ="https://raw.githubusercontent.com/HughParsonage/grattex/master/Report.tex", destfile = "Report.tex")
+  }
+
+
+
+
+# Download grattex template --------------------------------------------------------------------------------------------
+
+  if (downloadGrattex) {
+    message("Looking for or downloading Grattex")
+    download.file(url ="https://github.com/HughParsonage/grattex/archive/master.zip",
+                  destfile = "grattex.zip" )
+    # unzip the .zip file
+    unzip(zipfile = "grattex.zip")
+    file.remove("grattex.zip")
+  }
+
+
+
+# FUN Convert Word document to .tex using pandoc and read -----------------------------------------------------------------------
+
+convert_read_tex <- function(file.docx,
+                             out.tex) {
+
   # Convert using pandoc via bash
   message(paste0("Converting .docx to .tex using Pandoc"))
+
   if (tolower(.Platform$OS.type) == "windows") {
+
     shell(sprintf("pandoc --wrap=none --top-level=chapter -s %s -o %s", file.docx, out.tex))
+
   } else {
+
     system(sprintf("pandoc --wrap=none --top-level=chapter -s %s -o %s", file.docx, out.tex))
   }
 
 
-# ---- Read tex lines and set construct report framework ---- #
-
   # Read lines from pandoc output
   message(paste0("Reading .tex lines for processing"))
-  out_tex_lines <- read_lines(out.tex)
+  out_tex_lines <- readr::read_lines(out.tex)
 
+  return(out_tex_lines)
+}
+
+
+  out_tex_lines <- convert_read_tex(file.docx, out.tex)
+
+
+# ---- Set construct report framework ---- #
+
+create_preamble <- function(out_tex_lines) {
 
   # Drop preamble and system chapters (Overview, Contents, Figures, Tables, Recommendations)
   message(paste0("Bulding a more ~Grattan-style~ .tex file"))
@@ -141,18 +171,15 @@ word2grattex <- function(path = ".",
 
   }
 
-  # Search for Report.tex for preamble
-  if (!file.exists("Report.tex")) {
-    # Download and add current Grattex preamble if not present
-    download.file(url ="https://raw.githubusercontent.com/HughParsonage/grattex/master/Report.tex", destfile = "Report.tex")
-  }
-
+  # Read current Report.tex for preamble
   getpreamble <- read_lines("Report.tex")
 
   if (removeReport.tex) file.remove("Report.tex")
 
   # The first line can carry over some cruft: remove closing double brace if found
-  if (nchar(out_tex_lines[1]) - nchar(gsub("\\}", "", out_tex_lines[1])) !=  nchar(out_tex_lines[1]) - nchar(gsub("\\{", "", out_tex_lines[1])))  out_tex_lines[1] <- gsub("\\}\\}", "\\}", out_tex_lines[1])
+  if (nchar(out_tex_lines[1]) - nchar(gsub("\\}", "", out_tex_lines[1])) !=  nchar(out_tex_lines[1]) - nchar(gsub("\\{", "", out_tex_lines[1])))  {
+    out_tex_lines[1] <- gsub("\\}\\}", "\\}", out_tex_lines[1])
+  }
 
 
   # Construct report framework based on segmentation status
@@ -173,8 +200,21 @@ word2grattex <- function(path = ".",
                               )
   }
 
+  return(out_tex_lines)
+
+}
+
+
+out_tex_lines <- create_preamble(out_tex_lines)
+
+
+
+
 
 # ---- Clean up pandoc conversion annoyances
+
+clean_up_pandoc <- function(out_tex_lines) {
+
   message(paste0("Cleaning up after the messy Pandoc conversion"))
 
   # Remove numbers from sections and subsections
@@ -187,12 +227,9 @@ word2grattex <- function(path = ".",
   # Remove \protect\hypertarget{}{...}
   out_tex_lines <- gsub("\\\\protect\\\\hypertarget\\{[A-z0-9\\_\\(\\-]*\\}\\{([A-z0-9\\_\\(\\-]*)\\}\\{([A-z0-9\\_\\(\\-]*)\\}", "\\1\\2", out_tex_lines)
 
+
   # Remove \protect\hyperlink{}{...}
   out_tex_lines <- gsub("\\\\protect\\\\hyperlink\\{.*?\\}\\{(.*?)\\}", "\\1", out_tex_lines)
-  # This is where an issue with multi-citation lines occurs.
-  # Dumb fix?: if "XXXXX (YYYY}" -- replace with "XXXXX (YYYY);"?
-  # I think this is beacuse of an update to Word?????
-  # ie
 
   # Remove \texorpdfstring.
   ##  This can infect its own line and next. Eg:
@@ -269,6 +306,14 @@ word2grattex <- function(path = ".",
   out_tex_lines <- gsub("(\\(|\\s|\\{)(E|e)\\.?g\\.\\s?", "\\1\\\\eg ", out_tex_lines)  # this is unlikely to cause issue: http://www.thefreedictionary.com/words-that-end-in-etc
 
 
+  return(out_tex_lines)
+
+}
+
+
+out_tex_lines <- clean_up_pandoc(out_tex_lines)
+
+
 
 
 # ---- Replacing in-text citations in bib ---- #
@@ -329,6 +374,8 @@ word2grattex <- function(path = ".",
 
 
 # ---- Build Figure environments ---- #
+
+build_figure_environments <- function(out_tex_lines) {
 
   # Build the Figure environment where \includegraphics is found
   numberOfFigures <- sum(grepl("\\\\includegraphics", out_tex_lines))
@@ -546,14 +593,17 @@ word2grattex <- function(path = ".",
   }   # end buildFigures
 
 
+}
 
 
-# ---- Build Table environments ---- #
+out_tex_lines <- build_figure_environments(out_tex_lines)
 
-  # Building Table environment
+
+# Build Table environments ---------------------------------------------------------------------------------------
+
+build_table_environments <- function(out_tex_lines) {
 
   # Loop over all lines with \begin{longtable} to build Table environments
-  if (buildTables) {
     message("Building table environments (to enable cross-references)")
     counter = 0
 
@@ -601,48 +651,24 @@ word2grattex <- function(path = ".",
     }
 
 
-  } # end buildTable condition
+  } # end fun
+
+if (buildTables) {
+
+out_tex_lines <- build_table_environments(out_tex_lines)
+
+}
 
 
+# Cross-references ----------------------------------------------------------------------------------------------------------------
 
-# Write to tex file
-  write_lines(out_tex_lines, out.tex)
+replace_crossreferences <- function(out_tex_lines) {
 
-
-
-# ---- Cross-references ---- #
-if (crossReferences) {
-  # CURRENT:
   # Add appropriate prefix to labels for chapters, sections, subsections
   out_tex_lines <- gsub("(\\\\chapter\\{[^\\}]*\\}\\\\label\\{)([^\\}]*)\\}","\\1chap\\:\\2\\}", out_tex_lines)
   out_tex_lines <- gsub("(\\\\section\\{[^\\}]*\\}\\\\label\\{)([^\\}]*)\\}","\\1sec\\:\\2\\}", out_tex_lines)
   out_tex_lines <- gsub("(\\\\subsection\\{[^\\}]*\\}\\\\label\\{)([^\\}]*)\\}","\\1subsec\\:\\2\\}", out_tex_lines)
   out_tex_lines <- gsub("(\\\\subsubsection\\{[^\\}]*\\}\\\\label\\{)([^\\}]*)\\}","\\1subsubsec\\:\\2\\}", out_tex_lines)
-
-              if (testRun) {
-                # PLANNED:
-                # identifty headers
-                headers      <- c("chapter", "section", "subsection", "subsubsection")
-                shortHeaders <- c("chap"   , "sec"    , "subsec",     "subsubsec"    )
-                  ## for...
-
-                ## for each header line
-                header      <- headers[2]
-                shortHeader <- shortHeaders[2]
-                out_tex_lines[51]
-                l <- 51
-
-                  ### pull out header title and create chapter-specific label
-                  thisHeader <- gsub(paste0("\\\\",header,"\\{([^\\}]*)\\}\\\\label.*"),"\\1", out_tex_lines[l])
-                  thisHeaderLabel <- gsub("[[:punct:]]", "", thisHeader)
-                  thisHeaderLabel <- paste0(shortHeader, ":", gsub("\\s", "-", tolower(thisHeader)))
-                  if (sobSectionName != "") thisHeaderLabel <- paste0(thisHeaderLabel, "-", sobSectionName)
-                  ### sub in label
-                  out_tex_lines[l] <- gsub(paste0("\\\\",header,"\\{([^\\}]*)\\}\\\\label.*"),"\\1", out_tex_lines[l])
-
-              }
-
-
 
 
   # Apply cross-references to current in-text cross references
@@ -718,9 +744,6 @@ if (crossReferences) {
 
   }
 
-
-
-
   # Part 3: Create 'find' and 'replace', then replace
   type <- c(rep("Chapter",    length(chapter.text)),
             rep("Section",    length(section.text)),
@@ -760,10 +783,21 @@ if (crossReferences) {
   }
 
 
+} # end fun
+
+
+
+if (crossReferences) {
+  replace_crossreferences(out_tex_lines)
 }
 
-# ---- Create a new line when a footnote ENDS A SENTENCE ---- #
-if (testRun) {
+
+
+
+  run_testing_ground <- function(out_tex_lines) {
+
+  # ---- Create a new line when a footnote ENDS A SENTENCE ---- #
+
 
   # This might be difficult; so need to construct in `safe mode'
   # Could define a function to do this -> https://stackoverflow.com/questions/17623147/split-string-without-loss-of-characters?noredirect=1&lq=1
@@ -782,7 +816,14 @@ if (testRun) {
   ### good
   ## for those that contain more than one,
 
-}
+  }
+
+
+  if (testRun) {
+    out_tex_lines <- run_testing_ground(out_tex_lines)
+  }
+
+
 
 
 # ---- Write file and place files in appropriate folders ---- #
