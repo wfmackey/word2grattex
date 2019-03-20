@@ -88,7 +88,7 @@ The function takes a Word document in the Grattan template and:
     - creates `\insertgraphics` for a standard Grattan chart size and inserts the n<sup>th</sup> page of the name of your PDF chart deck, or defaults to the n<sup>th</sup> page of `chartdeck.pdf` if a PDF is not provided (this can be quickly fixed afterwards with find/replace);
     - labels charts with `fig:figure-caption`.
 * Builds Table environments.
-    - _But doesn't build your tables_ :( See the `Excel2LaTeX` Excel plugin for assistance there.
+    - _But doesn't build your tables_ :( See the `kableExtra` package in R, or `Excel2LaTeX` Excel plugin for assistance.
 * Applies appropriate labels to chapters, sections, subsections, etc.:
     - `chap:`, `sec:`, `subsec:`, etc.
 * Replaces cross-references with appropriate labels.
