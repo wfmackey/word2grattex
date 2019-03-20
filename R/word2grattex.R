@@ -67,7 +67,7 @@ word2grattex <- function(path = ".",
   out_tex_file <- sprintf("%s.tex", tools::file_path_sans_ext(file.docx))
 
   # If bibReplace is requested, make sure there is a bib file
-  isBibHere <- dir(path = path, pattern = "\\.bib$", full.names = TRUE)
+  isBibHere <- dir(path = ".", pattern = "\\.bib$", full.names = TRUE)
 
   if (bibReplace & identical(isBibHere, character(0))) {
     stop(paste0("Oop -- you asked for bibReplace, but I can't find a .bib file in ", path))
@@ -179,7 +179,7 @@ if (!buildFigures) {
   message("Not building figure environments")
   out_tex_lines <- gsub("\\\\includegraphics", "\\%\\%\\\\includegraphics", out_tex_lines)
 }
-  
+
 
 if (buildFigures) out_tex_lines <- build_figure_environments(out_tex_file, haveDownloadedGrattex = TRUE)
 
