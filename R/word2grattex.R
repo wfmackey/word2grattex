@@ -82,12 +82,12 @@ word2grattex <- function(path = ".",
 
 
   # Generate name for .tex file
-  out.tex <- sprintf("%s.tex", tools::file_path_sans_ext(file.docx))
+  out_tex_file <- sprintf("%s.tex", tools::file_path_sans_ext(file.docx))
 
 
   # Check if .tex file already exists and replace is permitted
-  if (!overwrite && file.exists(out.tex)) {
-    stop("`overwrite = FALSE` but `", out.tex, "` is present in `path`.")
+  if (!overwrite && file.exists(out_tex_file)) {
+    stop("`overwrite = FALSE` but `", out_tex_file, "` is present in `path`.")
   }
 
   # Search for Report.tex for preamble
@@ -115,35 +115,38 @@ word2grattex <- function(path = ".",
 # FUN Convert Word document to .tex using pandoc and read -----------------------------------------------------------------------
 
 convert_read_tex <- function(file.docx,
-                             out.tex) {
+                             out_tex_file) {
 
   # Convert using pandoc via bash
   message(paste0("Converting .docx to .tex using Pandoc"))
 
   if (tolower(.Platform$OS.type) == "windows") {
 
-    shell(sprintf("pandoc --wrap=none --top-level=chapter -s %s -o %s", file.docx, out.tex))
+    shell(sprintf("pandoc --wrap=none --top-level=chapter -s %s -o %s", file.docx, out_tex_file))
 
   } else {
 
-    system(sprintf("pandoc --wrap=none --top-level=chapter -s %s -o %s", file.docx, out.tex))
+    system(sprintf("pandoc --wrap=none --top-level=chapter -s %s -o %s", file.docx, out_tex_file))
   }
 
 
   # Read lines from pandoc output
   message(paste0("Reading .tex lines for processing"))
-  out_tex_lines <- readr::read_lines(out.tex)
+  out_tex_lines <- readr::read_lines(out_tex_file)
 
   return(out_tex_lines)
 }
 
 
-  out_tex_lines <- convert_read_tex(file.docx, out.tex)
+out_tex_lines <- convert_read_tex(file.docx, out_tex_file)
 
 
 # ---- Set construct report framework ---- #
 
-create_preamble <- function(out_tex_lines) {
+create_preamble <- function(tex_file) {
+
+  # Read tex file
+  out_tex_lines <- readr::read_lines(tex_file)
 
   # Drop preamble and system chapters (Overview, Contents, Figures, Tables, Recommendations)
   message(paste0("Bulding a more ~Grattan-style~ .tex file"))
@@ -200,20 +203,24 @@ create_preamble <- function(out_tex_lines) {
                               )
   }
 
+  # Write
+  readr::write_lines(out_tex_lines, tex_file)
+
   return(out_tex_lines)
 
 }
 
 
-out_tex_lines <- create_preamble(out_tex_lines)
+out_tex_lines <- create_preamble(out_tex_file)
 
 
 
+# ---- Clean up pandoc conversion annoyances ----------------------------------------
 
+clean_up_pandoc <- function(tex_file) {
 
-# ---- Clean up pandoc conversion annoyances
-
-clean_up_pandoc <- function(out_tex_lines) {
+  # Read lines
+  out_tex_lines <- readr::read_lines(tex_file)
 
   message(paste0("Cleaning up after the messy Pandoc conversion"))
 
@@ -305,22 +312,25 @@ clean_up_pandoc <- function(out_tex_lines) {
   out_tex_lines <- gsub("([\\s\\(]{1})(I|i)e\\.\\s?" , "\\1\\\\ie ", out_tex_lines) # only look for _ie. or (ie. to avoid natural words ending in ie (eg chippie.)
   out_tex_lines <- gsub("(\\(|\\s|\\{)(E|e)\\.?g\\.\\s?", "\\1\\\\eg ", out_tex_lines)  # this is unlikely to cause issue: http://www.thefreedictionary.com/words-that-end-in-etc
 
+  # Write lines
+  readr::write_lines(out_tex_lines, tex_file)
 
   return(out_tex_lines)
 
 }
 
 
-out_tex_lines <- clean_up_pandoc(out_tex_lines)
+out_tex_lines <- clean_up_pandoc(out_tex_file)
 
 
 
 
-# ---- Replacing in-text citations in bib ---- #
+# Replacing in-text citations in bib -------------------------------------------------
+# needs to be refactored!
     ## This needs to be done before Figure references
     ## to ensure external citation figure references
     ## are included withtin \textcite[][figure~1.1]{...}
-    tomaster.tex <- paste0("grattex-master/",substring(out.tex,3))
+    tomaster.tex <- paste0("grattex-master/", substring(out_tex_file,3))
 
     if (bibReplace) {
       message("Adding in-text citations from the .bib file")
@@ -373,9 +383,12 @@ out_tex_lines <- clean_up_pandoc(out_tex_lines)
     message("Your bib file has been renamed 'put-new-refs-here.bib' and is stored in the bib/ folder")
 
 
-# ---- Build Figure environments ---- #
+# ---- Build Figure environments ------------------------------------------------------------------------
 
-build_figure_environments <- function(out_tex_lines) {
+build_figure_environments <- function(tex_file) {
+
+  # Read
+  out_tex_lines <- readr::read_lines(tex_file)
 
   # Build the Figure environment where \includegraphics is found
   numberOfFigures <- sum(grepl("\\\\includegraphics", out_tex_lines))
@@ -588,7 +601,8 @@ build_figure_environments <- function(out_tex_lines) {
 
     }
 
-
+    # Write
+    readr::write_lines(out_tex_lines, tex_file)
 
   }   # end buildFigures
 
@@ -596,12 +610,16 @@ build_figure_environments <- function(out_tex_lines) {
 }
 
 
-out_tex_lines <- build_figure_environments(out_tex_lines)
+out_tex_lines <- build_figure_environments(out_tex_file)
 
 
 # Build Table environments ---------------------------------------------------------------------------------------
 
-build_table_environments <- function(out_tex_lines) {
+build_table_environments <- function(tex_file) {
+
+  # Read
+  out_tex_lines <- readr::read_lines(tex_file)
+
 
   # Loop over all lines with \begin{longtable} to build Table environments
     message("Building table environments (to enable cross-references)")
@@ -650,19 +668,26 @@ build_table_environments <- function(out_tex_lines) {
       out_tex_lines <- gsub(paste0("Tables?\\s?", t,"([^0-9])"), paste0("\\\\Cref\\{", tabRefs[t], "\\}\\1"), out_tex_lines)
     }
 
+    # Write
+    readr::write_lines(out_tex_lines, tex_file)
 
   } # end fun
 
 if (buildTables) {
 
-out_tex_lines <- build_table_environments(out_tex_lines)
+out_tex_lines <- build_table_environments(out_tex_file)
 
 }
 
 
+
+
 # Cross-references ----------------------------------------------------------------------------------------------------------------
 
-replace_crossreferences <- function(out_tex_lines) {
+replace_crossreferences <- function(tex_file) {
+
+  # Read
+  readr::read_lines(tex_file)
 
   # Add appropriate prefix to labels for chapters, sections, subsections
   out_tex_lines <- gsub("(\\\\chapter\\{[^\\}]*\\}\\\\label\\{)([^\\}]*)\\}","\\1chap\\:\\2\\}", out_tex_lines)
@@ -782,22 +807,27 @@ replace_crossreferences <- function(out_tex_lines) {
 
   }
 
+  # Write
+  readr::write_lines(out_tex_lines, tex_file)
 
 } # end fun
 
 
 
 if (crossReferences) {
-  replace_crossreferences(out_tex_lines)
+  replace_crossreferences(out_tex_file)
 }
 
 
 
 
-  run_testing_ground <- function(out_tex_lines) {
+run_testing_ground <- function(tex_file) {
+
+  # Read
+  readr::read_lines(tex_file)
+
 
   # ---- Create a new line when a footnote ENDS A SENTENCE ---- #
-
 
   # This might be difficult; so need to construct in `safe mode'
   # Could define a function to do this -> https://stackoverflow.com/questions/17623147/split-string-without-loss-of-characters?noredirect=1&lq=1
@@ -816,6 +846,10 @@ if (crossReferences) {
   ### good
   ## for those that contain more than one,
 
+
+  # Write
+  readr::write_lines(out_tex_lines, tex_file)
+
   }
 
 
@@ -828,29 +862,34 @@ if (crossReferences) {
 
 # ---- Write file and place files in appropriate folders ---- #
 
-  # Write to tex file
-  write_lines(out_tex_lines, out.tex)
-
-
   # Move to grattex folder if grattex folder was downloaded
   if (downloadGrattex) {
 
-    file.copy(out.tex, file.path(tomaster.tex))
-    file.remove(out.tex)
+    file.copy(out_tex_file, file.path(tomaster.tex))
+    file.remove(out_tex_file)
 
     if (removeReport.tex) file.remove("./grattex-master/Report.tex")
 
   }
 
-  if (!downloadGrattex)  tomaster.tex <- paste0(substring(out.tex,3))
+  if (!downloadGrattex)  tomaster.tex <- paste0(substring(out_tex_file,3))
 
 
-  message("~Conversion complete~")
+  # Print over-the-top completion message
+  for (x in 1:10) {
+    space <- paste0(rep(" ", x), collapse = "")
+  message(paste0(space, "~Conversion complete~", collapse = ""))
+  }
 
+  message("~Wooh!~")
+
+  for (x in 10:1) {
+    space <- paste0(rep(" ", x), collapse = "")
+    message(paste0(space, "~Conversion complete~", collapse = ""))
+  }
 
 
   # Be kind: set working directory back to normal
   setwd(current_wd)
 
 }
-
