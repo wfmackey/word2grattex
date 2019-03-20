@@ -7,7 +7,7 @@
 word2grattex(path = ".", overwrite = TRUE, downloadGrattex = FALSE,
   removeReport.tex = TRUE, bibReplace = TRUE, buildFigures = TRUE,
   buildTables = TRUE, crossReferences = TRUE, segmented = FALSE,
-  sobSectionName = "", testRun = FALSE)
+  testRun = FALSE)
 }
 \arguments{
 \item{path}{The path of the folder containing your Word document.}
@@ -27,8 +27,6 @@ word2grattex(path = ".", overwrite = TRUE, downloadGrattex = FALSE,
 \item{crossReferences}{Automatically create cross-references. Eg: “See Section 2.2” to "See \\Cref{subsec:section-name}".}
 
 \item{segmented}{Set to TRUE if this is just a chapter or section of a larger document.}
-
-\item{sobSectionName}{Set to TRUE if State Orange Book section names are desired.}
 
 \item{testRun}{To test new features of word2grattex. Leave as FALSE.}
 }

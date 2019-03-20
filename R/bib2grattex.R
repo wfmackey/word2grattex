@@ -9,7 +9,6 @@
 #' @param ibid Search for instances of 'ibid' and replace citation with most recent citation. This _only_ works when "ibid" is in the same paragraph as the most recent citation.
 #' @param testRun To test new features of word2grattex. Leave as FALSE.
 #'
-#' @importFrom grattanReporter lint_bib
 #' @importFrom readr read_lines write_lines
 #' @importFrom stringr str_count
 #' @import dplyr
