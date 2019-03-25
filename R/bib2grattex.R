@@ -6,10 +6,7 @@
 #' @param fromWord2grattex TRUE if the bib2grattex function is nested within word2grattex.
 #' @param titleLength The number of characters of the document title to be used in the reference key. The reference key is formatted as: AuthorYearTitle. Eg. Norton2018Droppingoutthecostsa when titleLength = 20 (the default).
 #' @param variousYears Phrases that have been used to denote various years (in place of a numerical year within the in-text citation).
-#' @param ibid Search for instances of 'ibid' and replace citation with most recent citation. This _only_ works when "ibid" is in the same paragraph as the most recent citation.
-#' @param testRun To test new features of word2grattex. Leave as FALSE.
 #'
-#' @importFrom grattanReporter lint_bib
 #' @importFrom readr read_lines write_lines
 #' @importFrom stringr str_count
 #' @import dplyr
@@ -36,9 +33,7 @@ bib2grattex <- function(path = ".",
                         texName,
                         fromWord2grattex = FALSE,
                         titleLength = 20,
-                        variousYears     = c("multiple years", "Various years", "various years"),
-                        ibid = TRUE,
-                        testRun = FALSE
+                        variousYears     = c("multiple years", "Various years", "various years")
 ) {
 
   findNumberTotal <- 6   #There are X find alternatives (this needs to be updated manually for now)
@@ -46,8 +41,8 @@ bib2grattex <- function(path = ".",
 
   # Tidy path and bib if needed
   path = gsub("\\/$", "" , path)
-  if (!grepl("\\.bib$", bibName)) bibName = paste0(bibName, ".bib")
-  if (!grepl("\\.tex$", texName)) texName = paste0(texName, ".tex")
+  if (!grepl("\\.bib$", bibName)) bibName <- paste0(bibName, ".bib")
+  if (!grepl("\\.tex$", texName)) texName <- paste0(texName, ".tex")
 
   # Preserving user's working directory
   if (!fromWord2grattex) {
@@ -319,8 +314,8 @@ bib2grattex <- function(path = ".",
 
   citationSearch <- function(findNumber, brackets) {
 
-    if ( fromWord2grattex) texFile <- read_lines("outtex.tex")
-    if (!fromWord2grattex) texFile <- read_lines(texName)
+    if ( fromWord2grattex) texFile <- readr::read_lines(texName)
+    if (!fromWord2grattex) texFile <- readr::read_lines(texName)
 
     thisCurrent <- get(paste0("find", findNumber))[bib]
     thisReplace <- replace[bib]
@@ -332,9 +327,9 @@ bib2grattex <- function(path = ".",
 
     texFile <- gsub(thisCurrent, thisReplace, texFile, fixed = TRUE)
 
-    if ( fromWord2grattex) write_lines(texFile, "outtex.tex")
-    if (!fromWord2grattex) write_lines(texFile, texName)
-
+    if ( fromWord2grattex) readr::write_lines(texFile, texName)
+    if (!fromWord2grattex) readr::write_lines(texFile, texName)
+    
 
   }
 
@@ -350,26 +345,15 @@ bib2grattex <- function(path = ".",
   }
 
 
+
+
   # ---- ibid functionality ---- #
-  if ( fromWord2grattex) texFile <- read_lines("outtex.tex")
-  if (!fromWord2grattex) texFile <- read_lines(texName)
-
-
-  if (ibid) {
-    # Two processes:
-    ## one line process (via simple gsub)
-    texFile <- gsub("(.*textcite.*?\\{([a-zA-Z0-9]*)\\}.*?)(?:i|I)bid\\.?",
-                    "\\1\\\\textcite[][]\\{\\2\\}",
-                    texFile)
-
-    ## multi-line process (harder --> might need to number)
-    ## tbd, see issue #2
-
-
-
-  }
+  # NA
 
   # ---- Managing textcites; creating footcites ---- #
+  if ( fromWord2grattex) texFile <- readr::read_lines(texName)
+  if (!fromWord2grattex) texFile <- readr::read_lines(texName)
+
 
   # Remove \emph from texcites in footnotes: if \emph surrounds a \textcite, remove it
   texFile <- gsub("\\\\emph\\{(\\\\textcite\\[\\]\\[\\]\\{[^\\}]*\\})\\}",
@@ -465,9 +449,8 @@ bib2grattex <- function(path = ".",
 
 
   # ----- # Write tex file with updated bib citations ---- #
-  if ( fromWord2grattex) write_lines(texFile, "outtex.tex")
-  if (!fromWord2grattex) write_lines(texFile, paste0(path,"/", texName))
-
+  if ( fromWord2grattex) readr::write_lines(texFile, texName)
+  if (!fromWord2grattex) readr::write_lines(texFile, paste0(path,"/", texName))
 
 
   message("End of bib2grattex")
