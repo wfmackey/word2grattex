@@ -105,7 +105,7 @@ out_tex_lines <- convert_doc_to_tex(file.docx, out_tex_file)
 
 # ---- Set construct report framework ---- #
 
-out_tex_lines <- create_preamble(out_tex_file)
+out_tex_lines <- create_preamble(out_tex_file, isSegmented = segmented)
 
 
 # ---- Clean up pandoc conversion annoyances ----------------------------------------
@@ -118,57 +118,44 @@ out_tex_lines <- clean_up_pandoc(out_tex_file)
     ## This needs to be done before Figure references
     ## to ensure external citation figure references
     ## are included withtin \textcite[][figure~1.1]{...}
-    tomaster.tex <- paste0("grattex-master/", substring(out_tex_file,3))
+    tomaster.tex <- paste0("grattex-master/", substring(out_tex_file, 3))
 
     if (bibReplace) {
+
       message("Adding in-text citations from the .bib file")
 
 
-      # Write tex file temporarily
-      write_lines(out_tex_lines, "outtex.tex")
-
-      # Assign bib
-      assign("bib",
-             dir(path = ".", pattern = "\\.bib$", full.names = TRUE) %>%
-             substring(., 3))
+      # Find bib file
+      bib <- dir(path = ".", pattern = "\\.bib$", full.names = TRUE) %>%
+             substring(., 3)
 
 
-      # assign("bib", dir(path = ".",
-      #                   pattern = "\\.bib$",
-      #                   full.names = TRUE))
       if (downloadGrattex)  bibPath <- paste0("grattex-master/bib/", bib)
-      if (!downloadGrattex) bibPath <- paste0("bib/", bib)
+
+      if (!downloadGrattex) {
+        if(!dir.exists("bib")) dir.create("bib")
+        bibPath <- paste0("bib/", bib)
+      }
 
 
       bib2grattex(bibName = bib,
-                  texName = "",
+                  texName = out_tex_file,
                   fromWord2grattex = TRUE)
 
       # Move bib file to ./bib folder
       file.copy(bib, bibPath)
+      message("Your bib file has been copied to the bib/ folder")
 
 
       # Read updated .tex file post-bib2grattex
       message("Reading .tex file lines back in after bibReplacement")
-      out_tex_lines <- read_lines("outtex.tex")
-
-      # Drop temp file
-      file.remove("outtex.tex")
+      out_tex_lines <- read_lines(out_tex_file)
 
 
-      # Remove old "put-new-refs-here" file and replace with new
-      if (downloadGrattex) {
-        # tryCatch(file.remove("grattex-master/bib/put-new-refs-here.bib"))
-        file.rename(bibPath, "grattex-master/bib/put-new-refs-here.bib")
-      }
-      if (!downloadGrattex) {
-        # tryCatch(file.remove("bib/put-new-refs-here.bib"))
-        file.rename(bibPath, "bib/put-new-refs-here.bib")
-      }
     }
 
 
-    message("Your bib file has been renamed 'put-new-refs-here.bib' and is stored in the bib/ folder")
+    
 
 
 
@@ -181,7 +168,7 @@ if (!buildFigures) {
 }
 
 
-if (buildFigures) out_tex_lines <- build_figure_environments(out_tex_file, haveDownloadedGrattex = TRUE)
+if (buildFigures) out_tex_lines <- build_figure_environments(out_tex_file, haveDownloadedGrattex = downloadGrattex)
 
 
 # Build Table environments ---------------------------------------------------------------------------------------

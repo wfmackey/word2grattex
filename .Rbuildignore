@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^egdoc$
 ^dontrun$
+^.travis.yml$

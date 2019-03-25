@@ -214,7 +214,13 @@ build_figure_environments <- function(tex_file,
     if (length(chartspath) > 0) {
       
       if ( haveDownloadedGrattex)  file.copy(chartspath, paste0("grattex-master/atlas/", charts.pdf))
-      if (!haveDownloadedGrattex)  file.copy(chartspath, paste0("atlas/",charts.pdf))
+
+      if (!haveDownloadedGrattex)    {
+        if(!dir.exists("atlas")) dir.create("atlas")
+          print("HELLO")
+        file.copy(chartspath, paste0("atlas/",charts.pdf))
+      }
+
         
       
     }

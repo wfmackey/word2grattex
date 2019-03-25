@@ -2,7 +2,7 @@
 #'
 #' @param tex_file The path to the .tex file
 #' @param removeReport.tex Remove the unnecessary Report.tex file? (default is TRUE)
-#' @param segmented Is this part of a segmented report (i.e. a single chapter of a larger report?)
+#' @param isSegmented Is this part of a segmented report (i.e. a single chapter of a larger report?)
 #' 
 #' @importFrom readr read_lines write_lines
 #'
@@ -12,7 +12,7 @@
 
 create_preamble <- function(tex_file,
                             removeReport.tex = TRUE,
-                            segmented = FALSE) {
+                            isSegmented) {
   
   # Read tex file
   out_tex_lines <- readr::read_lines(tex_file)
@@ -55,8 +55,10 @@ create_preamble <- function(tex_file,
   
   
   # Construct report framework based on segmentation status
-  if (!segmented) {
+  if (!isSegmented) {
     
+    # Add preamble etc if NOT segmented
+
     out_tex_lines <-     c( getpreamble[(which(getpreamble == "\\documentclass{grattan}")):(which(getpreamble == "\\begin{document}"))],
                             "",
                             "\\contentspage",
@@ -69,7 +71,7 @@ create_preamble <- function(tex_file,
                             "\\printbibliography",
                             "",
                             "\\end{document}"
-    )
+                          )
   }
   
   # Write

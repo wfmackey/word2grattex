@@ -4,14 +4,14 @@
 \alias{create_preamble}
 \title{Generate and add the current grattex preamble to a pandoc-converted .tex file}
 \usage{
-create_preamble(tex_file, removeReport.tex = TRUE, segmented = FALSE)
+create_preamble(tex_file, removeReport.tex = TRUE, isSegmented)
 }
 \arguments{
 \item{tex_file}{The path to the .tex file}
 
 \item{removeReport.tex}{Remove the unnecessary Report.tex file? (default is TRUE)}
 
-\item{segmented}{Is this part of a segmented report (i.e. a single chapter of a larger report?)}
+\item{isSegmented}{Is this part of a segmented report (i.e. a single chapter of a larger report?)}
 }
 \description{
 Generate and add the current grattex preamble to a pandoc-converted .tex file
