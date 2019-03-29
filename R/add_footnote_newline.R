@@ -25,12 +25,12 @@ add_footnote_newline <- function(texPath) {
     }
 
     message(paste("Skipping line", x))
-    return(lines[x])
+    return(tex[x])
 
   }
 
   tex <- purrr::map(1:length(tex), .f = lbl)
-  tex <- unlist(lines)
+  tex <- unlist(tex)
 
   readr::write_lines(tex, texPath)
 
