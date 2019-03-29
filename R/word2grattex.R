@@ -8,6 +8,7 @@
 #' @param buildFigures Automatically build figure environments with titles, units, \\includegraphics, notes and sources.
 #' @param buildTables Automatically build table environments to enable table cross-referencing. Note that this does _not_ build the table itself.
 #' @param crossReferences Automatically create cross-references. Eg: “See Section 2.2” to "See \\Cref{subsec:section-name}".
+#' @param footnoteNewLine Create a new line for each footnote in .tex
 #' @param segmented Set to TRUE if this is just a chapter or section of a larger document.
 #' @param testRun To test new features of word2grattex. Leave as FALSE.
 #'
@@ -29,6 +30,7 @@ word2grattex <- function(path = ".",
                          buildFigures = TRUE,
                          buildTables = TRUE,
                          crossReferences = TRUE,
+                         footnoteNewLine = TRUE,
                          segmented = FALSE,
                          testRun = FALSE
                          ) {
@@ -155,7 +157,7 @@ out_tex_lines <- clean_up_pandoc(out_tex_file)
     }
 
 
-    
+
 
 
 
@@ -179,6 +181,13 @@ if (buildTables) out_tex_lines <- build_table_environments(out_tex_file)
 
 if (crossReferences) {
   replace_crossreferences(out_tex_file)
+}
+
+
+# Footnote new line ----------------------------------------------------------------------------------------------------------------
+
+if (footnoteNewLine) {
+  add_footnote_newline(out_tex_file)
 }
 
 
