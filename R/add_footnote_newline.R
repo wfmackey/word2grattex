@@ -1,6 +1,7 @@
 #' Create a new line for each footnote .tex
 #'
-#' @param texPath The path to the .tex file
+#' @param texPath The path to a tex file, with the .tex extension.
+#' Eg "report/myreport.tex"
 #'
 #' @importFrom readr read_lines write_lines
 #'
