@@ -6,8 +6,8 @@
 \usage{
 word2grattex(path = ".", overwrite = TRUE, downloadGrattex = FALSE,
   removeReport.tex = TRUE, bibReplace = TRUE, buildFigures = TRUE,
-  buildTables = TRUE, crossReferences = TRUE, segmented = FALSE,
-  testRun = FALSE)
+  buildTables = TRUE, crossReferences = TRUE, footnoteNewLine = TRUE,
+  segmented = FALSE, testRun = FALSE)
 }
 \arguments{
 \item{path}{The path of the folder containing your Word document.}
@@ -25,6 +25,8 @@ word2grattex(path = ".", overwrite = TRUE, downloadGrattex = FALSE,
 \item{buildTables}{Automatically build table environments to enable table cross-referencing. Note that this does _not_ build the table itself.}
 
 \item{crossReferences}{Automatically create cross-references. Eg: “See Section 2.2” to "See \\Cref{subsec:section-name}".}
+
+\item{footnoteNewLine}{Create a new line for each footnote in .tex}
 
 \item{segmented}{Set to TRUE if this is just a chapter or section of a larger document.}
 
