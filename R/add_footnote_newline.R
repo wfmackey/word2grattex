@@ -11,7 +11,26 @@ add_footnote_newline <- function(texPath) {
 
   tex <- readr::read_lines(texPath)
 
-  tex <- gsub("\\\\foot", "%\n\t\\\\foot", tex)
+  # Line-by-line: does not start with \\footnote OR \t\\foot
+  lbl <- function(x) {
+
+
+
+    if (all(grepl("^(?!\\t\\\\foot)", tex[x], perl = TRUE),
+            grepl("^(?!\\\\foot)", tex[x], perl = TRUE))) {
+
+      message(paste("Fixing line", x))
+      return(gsub("\\\\foot", "%\n\t\\\\foot", tex[x]))
+
+    }
+
+    message(paste("Skipping line", x))
+    return(lines[x])
+
+  }
+
+  tex <- purrr::map(1:length(tex), .f = lbl)
+  tex <- unlist(lines)
 
   readr::write_lines(tex, texPath)
 
