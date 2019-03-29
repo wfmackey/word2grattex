@@ -7,7 +7,8 @@
 add_footnote_newline(texPath)
 }
 \arguments{
-\item{texPath}{The path to the .tex file}
+\item{texPath}{The path to a tex file, with the .tex extension.
+Eg "report/myreport.tex"}
 }
 \description{
 Create a new line for each footnote .tex
