@@ -25,14 +25,21 @@ check_bib_duplicates <- function(bibPath,
 bibFile <- readr::read_lines(bibPath)
 
 # Get titles and authors
-entry_lines   <- grep("\\@", bibFile)
+entry_lines   <- grep("\\@[a-zA-Z]*\\{", bibFile)
 end_entry_lines <- c(entry_lines[2:length(entry_lines)]-1, length(bibFile))
+
+entry_keys   <- gsub("\\@[a-zA-Z]*\\{(.*)", "\\1", bibFile[entry_lines])
+entry_keys   <- gsub(",", "", entry_keys)
+
 
 get_all_authors <- function(x) {
 
   entry <- bibFile[entry_lines[x]:end_entry_lines[x]]
   author <- entry[grep("\\s(author)\\s*\\=", entry)]
-  author <- gsub(".*\\{\\{?(.*?)\\}\\}?", "\\1", author)
+  author <- gsub("\\s*author\\s*=\\s*", "", author)
+  author <- gsub("\\{", "", author)
+  author <- gsub("\\}", "", author)
+  author <- gsub("\\\\", "", author)
   author <- gsub(",", "", author)
 
   if(identical(author, character(0))) return("")
@@ -63,44 +70,54 @@ get_all_years <- function(x) {
 }
 
 entr <- entry_lines
+keys <- entry_keys
 auth <- map(1:length(entry_lines), get_all_authors) %>% unlist()
 titl <- map(1:length(entry_lines), get_all_titles) %>% unlist()
 year <- map(1:length(entry_lines), get_all_years) %>% unlist()
 
 com <- cbind(entry = entr,
-      author = auth,
-      title = titl,
-      year = year)
+             key = keys,
+             author = auth,
+             title = titl,
+             year = year)
 
 
 # Compare each author + title with every other author + title
 compare_author_title <- function(x, y) {
 
-  ax <- com[x, 2]
-  ay <- com[y, 2]
+  ax <- com[x, 3]
+  ay <- com[y, 3]
 
 
   author_dup <- stringdist::amatch(ax, ay, maxDist = authorDistance, method = matchMethod)
   if(is.na(author_dup)) author_dup <- F
 
 
-  tx <- com[x, 3]
-  ty <- com[y, 3]
+  tx <- com[x, 4]
+  ty <- com[y, 4]
   title_dup <- stringdist::amatch(tx, ty, maxDist = titleDistance, method = matchMethod)
   if(is.na(title_dup)) title_dup <- F
 
 
-  yx <- com[x, 4]
-  yy <- com[y, 4]
+  yx <- com[x, 5]
+  yy <- com[y, 5]
   year_dup  <- substr(yx, 1, 4) == substr(yy, 1, 4)
 
+
+
+  kx <- com[x, 2]
+  ky <- com[y, 2]
   if(author_dup & title_dup & year_dup) {
-    mes <- paste0("\nBib entry with author:",
-                  "\n\t\t", com[x, 2], " \n\tin\t", com[x, 4],
-                  "\n\twith title\n\t\t ",com[x, 3], "\t\n\t(at line ", entry_lines[x], " of your .bib file)",
-                  "\nlooked the same as the bib entry with author:",
-                  "\n\t\t", com[y, 2],  " \n\tin\t", com[y, 4],
-                  " \n\twith title\n\t\t",com[y, 3], "\t\n\t(at line ", entry_lines[y], ")")
+    mes <- paste0("\nBib entry ", kx, " with\n\tauthor:",
+                  "\n\t\t", ax, " \n\tin:\t", yx,
+                  "\n\twith title:\n\t\t", tx,
+                  "\n\tat line\t", entry_lines[x],
+                  " of your .bib file",
+                  "\n",
+                  "\nlooked the same as the bib entry ",  ky, ", with author:",
+                  "\n\t\t", ay,  " \n\tin:\t", yy,
+                  " \n\twith title:\n\t\t", ty,
+                  "\n\tat line\t", entry_lines[y])
 
     stop(mes, call. = F)
   }
@@ -112,7 +129,7 @@ compare_all_author_title <- function(x) {
   map2(x, y, compare_author_title)
 }
 
-results <- map(1:10, compare_all_author_title)
+results <- map(1:length(entry_lines), compare_all_author_title)
 
 
 }
