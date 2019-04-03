@@ -2,6 +2,12 @@
 
 `word2grattex` is an `R` packaged deisgned to make Word to LaTeX conversion faster and more accurate. It is relatively flexible but is most effective when used within the wider Grattan report production ecosystem.
 
+Importantly: because of unpredictable (and usually accidental) Word formatting choices, this tool is certainly more of an _art_ than it is a _science_. For example, there may be loose brackets or braces in your post-conversion document that you'll need to tidy yourself (sorry!). 
+
+There may also be incorrect conversions of references when using `bib2grattex` (via `word2grattex(bibReplace = TRUE)`, the default), because of 'Not Quite Twins' [see here](https://blog.apastyle.org/apastyle/2011/10/reference-twins.html_).
+
+That being said: it will do most of the work for you, and the problems it can create are -- in 25 full conversions and counting -- fewer than the problems it solves. 
+
 It **requires**:
 
 * `R` and `pandoc` (which usually ships with `R`, otherwise download [here](https://pandoc.org/installing.html))
@@ -46,13 +52,15 @@ Once you have created a repository for your new report, add your `.docx`, `.bib`
 ```
 
 
-Note that if you haven't set up a repository yet, you can turn on the `downloadGrattex` option `word2grattex(..., downloadGrattex = TRUE`, which will download the current version of the Grattex template and place your documents within it.
+Note that you can run the function before you set up a report repository. Just point the `word2grattex` function to any folder  that contains your `.docx` (and `.bib`, `.pdf`) files.
+
 
 ### Install and call: how to use it
 The package is run through `R` and can be installed using `devtools::github_install`:
 
 ```R
-install.packages(devtools)
+# Install devtools if you haven't already (remove the comment):
+# install.packages(devtools)
 
 devtools::github_install("wfmackey/word2grattex")
 
@@ -65,7 +73,7 @@ The package contains two large functions: `word2grattex` and `bib2grattex`. Note
 For our _Mapping Australian higher education 2018_ example, we can then run:
 
 ```R
-word2grattex(path = "./Dropbox (Grattan Institute)/Apps/Overleaf/mapping2018")
+word2grattex(path = "Dropbox (Grattan Institute)/Apps/Overleaf/mapping2018")
 
 ```
 
