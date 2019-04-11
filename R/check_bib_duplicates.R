@@ -4,6 +4,8 @@
 #' @param authorDistance A number between 0 and 1 for the loose (0) or tighter (1) match on authors (default is 0.4)
 #' @param titleDistance  A number between 0 and 1 for the loose (0) or tighter (1) match on titles (default is 0.2)
 #' @param matchMethod "jw" is the default. See https://www.rdocumentation.org/packages/stringdist/versions/0.9.5.1/topics/stringdist-metrics for extensive options.
+#' @param skipTitles A vector of bib entry titles to ignore. For example, "Budget Papers 1" will incorrectly match with "Budget Papers 2".
+#' Add skipTitles = c("Budget Papers 1") to ignore this duplicate.
 
 #'
 #' @importFrom readr read_lines write_lines
@@ -19,7 +21,8 @@
 check_bib_duplicates <- function(bibPath,
                                  authorDistance = 0.4,
                                  titleDistance = 0.2,
-                                 matchMethod = "jw"
+                                 matchMethod = "jw",
+                                 skipTitles = ""
                          ) {
 
 bibFile <- readr::read_lines(bibPath)
@@ -97,7 +100,7 @@ compare_author_title <- function(x, y) {
   ty <- com[y, 4]
   title_dup <- stringdist::amatch(tx, ty, maxDist = titleDistance, method = matchMethod)
   if(is.na(title_dup)) title_dup <- F
-
+  txy <- c(tx, ty)
 
   yx <- com[x, 5]
   yy <- com[y, 5]
@@ -107,6 +110,9 @@ compare_author_title <- function(x, y) {
 
   kx <- com[x, 2]
   ky <- com[y, 2]
+
+  # Skip if either is in skipTitles
+  if (txy %in% skipTitles %>% max() == 0) {
   if(author_dup & title_dup & year_dup) {
     mes <- paste0("\nBib entry ", kx, " with\n\tauthor:",
                   "\n\t\t", ax, " \n\tin:\t", yx,
@@ -121,6 +127,8 @@ compare_author_title <- function(x, y) {
 
     stop(mes, call. = F)
   }
+  }
+
 }
 
 

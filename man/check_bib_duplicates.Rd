@@ -5,7 +5,7 @@
 \title{Check bib duplicates}
 \usage{
 check_bib_duplicates(bibPath, authorDistance = 0.4,
-  titleDistance = 0.2, matchMethod = "jw")
+  titleDistance = 0.2, matchMethod = "jw", skipTitles = "")
 }
 \arguments{
 \item{bibPath}{Path to the bib file}
@@ -15,6 +15,9 @@ check_bib_duplicates(bibPath, authorDistance = 0.4,
 \item{titleDistance}{A number between 0 and 1 for the loose (0) or tighter (1) match on titles (default is 0.2)}
 
 \item{matchMethod}{"jw" is the default. See https://www.rdocumentation.org/packages/stringdist/versions/0.9.5.1/topics/stringdist-metrics for extensive options.}
+
+\item{skipTitles}{A vector of bib entry titles to ignore. For example, "Budget Papers 1" will incorrectly match with "Budget Papers 2".
+Add skipTitles = c("Budget Papers 1") to ignore this duplicate.}
 }
 \description{
 Check bib duplicates
