@@ -74,10 +74,24 @@ For our _Mapping Australian higher education 2018_ example, we can then run:
 
 ```R
 word2grattex(path = "Dropbox (Grattan Institute)/Apps/Overleaf/mapping2018")
-
 ```
 
+**Note: if you do not have a bib file, set bibReplace = F:**
+```R
+word2grattex(path = "Dropbox (Grattan Institute)/Apps/Overleaf/mapping2018",
+             bibReplace = F)
+```
+Also, there is a yet-to-be-addressed issue with Tables that pops up. If you receive an error about tables, please set `buildTables = F`:
+
+```R
+word2grattex(path = "Dropbox (Grattan Institute)/Apps/Overleaf/mapping2018",
+             bibReplace = F, buildTables = F)
+```
+
+
 This will produce a `.tex` file.
+
+If there are any issues, please get in touch with Will.
 
 
 
