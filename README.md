@@ -56,13 +56,13 @@ Note that you can run the function before you set up a report repository. Just p
 
 
 ### Install and call: how to use it
-The package is run through `R` and can be installed using `devtools::github_install`:
+The package is run through `R` and can be installed using `remotes::github_install`:
 
 ```R
 # Install devtools if you haven't already (remove the comment):
-# install.packages(devtools)
+# install.packages(remotes)
 
-devtools::github_install("wfmackey/word2grattex")
+remotes::install_github("wfmackey/word2grattex")
 
 library(word2grattex)
 
