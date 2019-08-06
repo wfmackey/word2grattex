@@ -1,7 +1,7 @@
 Package: word2grattex
 Type: Package
 Title: Convert Word documents to Grattan Institute LaTeX reports
-Version: 0.1.0
+Version: 0.1.1
 Author: person("Will", "Mackey", email = "william.mackey@grattaninstitute.edu.au",
                 role = c("aut", "cre"))
 Maintainer: Will Mackey <william.mackey@grattaninstitute.edu.au>

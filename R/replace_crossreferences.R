@@ -112,7 +112,7 @@ replace_crossreferences <- function(tex_file) {
 
     if (type[n] == "Chapter") {
       # Chapter n
-      out_tex_lines <- gsub(paste0("(C|c)hapters?\\s",find[n]), paste0("\\\\Cref\\{", replace[n] ,"}\\2"), out_tex_lines)
+      out_tex_lines <- gsub(paste0("(C|c)hapters?\\s",find[n]), paste0("\\\\Chapref\\{", replace[n] ,"}\\2"), out_tex_lines)
     }
 
     if (type[n] == "Section") {

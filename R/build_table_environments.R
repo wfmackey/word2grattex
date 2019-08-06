@@ -20,6 +20,10 @@ build_table_environments <- function(tex_file) {
 
   numberOfTables <- sum(grepl(tableSearch, out_tex_lines))
 
+  if (numberOfTables == 0) message("No tables found!")
+
+  if (numberOfTables > 0) {
+
   for (l in grep(tableSearch, out_tex_lines)) {
 
     counter = counter + 1
@@ -43,7 +47,9 @@ build_table_environments <- function(tex_file) {
 
       # add to tabRefs to allow replacement
       if (counter == 1) tabRefs <- tablelabel
+
       if (counter >  1) tabRefs <- c(tabRefs, tablelabel)
+
 
       # find the closing longtable line
       close <- min(grep("\\\\end\\{longtable\\}" , out_tex_lines[l:length(out_tex_lines)]))
@@ -52,11 +58,18 @@ build_table_environments <- function(tex_file) {
       out_tex_lines[l+(close+1)] <- "\\end{table}"
     }
 
+    if (tab == Inf) {
+    tabRefs <- ""
+    }
+
   }  # end table loop
 
-  # Replace in-text Figure references with cross-references
+  # Replace in-text Table references with cross-references
   for (t in 1:numberOfTables) {
+    message("d")
     out_tex_lines <- gsub(paste0("Tables?\\s?", t,"([^0-9])"), paste0("\\\\Cref\\{", tabRefs[t], "\\}\\1"), out_tex_lines)
+  }
+
   }
 
   # Write
