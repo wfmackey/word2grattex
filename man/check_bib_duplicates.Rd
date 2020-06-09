@@ -4,8 +4,13 @@
 \alias{check_bib_duplicates}
 \title{Check bib duplicates}
 \usage{
-check_bib_duplicates(bibPath, authorDistance = 0.4,
-  titleDistance = 0.2, matchMethod = "jw", skipTitles = "")
+check_bib_duplicates(
+  bibPath,
+  authorDistance = 0.4,
+  titleDistance = 0.2,
+  matchMethod = "jw",
+  skipTitles = ""
+)
 }
 \arguments{
 \item{bibPath}{Path to the bib file}

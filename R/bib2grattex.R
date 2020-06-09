@@ -208,7 +208,7 @@ bib2grattex <- function(path = ".",
     # If there is no title, send warning and set to ""
     if (identical(thisTitle, character(0))) {
       thisTitle <- ""
-      print(paste0("Title not found for bib ", bib, "!"))
+      print(paste0("Title not found for bib ", bib, "! Key: ", authorKey[bib]))
     }
 
     # Add to authorList
@@ -329,7 +329,7 @@ bib2grattex <- function(path = ".",
 
     if ( fromWord2grattex) readr::write_lines(texFile, texName)
     if (!fromWord2grattex) readr::write_lines(texFile, texName)
-    
+
 
   }
 

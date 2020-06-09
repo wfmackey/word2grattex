@@ -4,10 +4,19 @@
 \alias{word2grattex}
 \title{Convert a Grattan report-style Word document to .tex}
 \usage{
-word2grattex(path = ".", overwrite = TRUE, downloadGrattex = FALSE,
-  removeReport.tex = TRUE, bibReplace = TRUE, buildFigures = TRUE,
-  buildTables = TRUE, crossReferences = TRUE, footnoteNewLine = TRUE,
-  segmented = FALSE, testRun = FALSE)
+word2grattex(
+  path = ".",
+  overwrite = TRUE,
+  downloadGrattex = FALSE,
+  removeReport.tex = TRUE,
+  bibReplace = TRUE,
+  buildFigures = TRUE,
+  buildTables = TRUE,
+  crossReferences = TRUE,
+  footnoteNewLine = TRUE,
+  segmented = FALSE,
+  testRun = FALSE
+)
 }
 \arguments{
 \item{path}{The path of the folder containing your Word document.}
