@@ -208,7 +208,8 @@ bib2grattex <- function(path = ".",
     # If there is no title, send warning and set to ""
     if (identical(thisTitle, character(0))) {
       thisTitle <- ""
-      print(paste0("Title not found for bib ", bib, "! Key: ", authorKey[bib]))
+      warning(paste0("Title not found for bib ", bib, "! Context: "))
+      print(bib.all[(bibNumber >= bib & bibNumber <= (bib+20))])
     }
 
     # Add to authorList
@@ -217,7 +218,6 @@ bib2grattex <- function(path = ".",
     } else {
       titleList <- c(titleList, thisTitle)
     }
-
 
   }
 
