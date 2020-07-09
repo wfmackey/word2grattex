@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 
 
-`word2grattex` is deisgned to make Word to LaTeX conversion faster and more accurate. It is relatively flexible but is most effective when used within the wider Grattan report production ecosystem.
+`word2grattex` is deigned to make Word to LaTeX conversion faster and more accurate. It is relatively flexible but is most effective when used within the wider Grattan report production ecosystem.
 
 It **requires**:
 
