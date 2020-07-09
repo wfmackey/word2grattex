@@ -65,6 +65,14 @@ word2grattex <- function(path = ".",
     }
   }
 
+  # Error if the name is Report.docx to save confusion down the line
+  if (grepl("Report\\.doc", file.docx)) {
+    stop(
+      paste0("Sorry, the Word document found is called ", file.docx,
+             ", which causes issues down the line. Please rename it to something else (like Report1.docx).")
+    )
+  }
+
   # Generate name for .tex file
   out_tex_file <- sprintf("%s.tex", tools::file_path_sans_ext(file.docx))
 
