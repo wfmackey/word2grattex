@@ -30,8 +30,25 @@ create_preamble <- function(tex_file,
 
   }
 
+  # Find non-system chapter lines
   if (max(grepl("\\\\chapter\\{[[:alpha:]]+", out_tex_lines))==1) {
-    out_tex_lines <- out_tex_lines[((min(grep("\\\\chapter\\{[[:alpha:]]+", out_tex_lines[end.system.chapter.line:length(out_tex_lines)]))-1)+end.system.chapter.line:length(out_tex_lines))]
+
+    # Remove \texorpdfstring{X }{ from chapter lines
+    out_tex_lines[end.system.chapter.line:length(out_tex_lines)]
+
+    # grepl("\\\\chapter\\{\\\\texorpdfstring\\{[A-Za-z0-9\\s]*\\}\\{", a)
+    # gsub("\\\\chapter\\{\\\\texorpdfstring\\{[[:print:]]*\\}\\{", "", a)
+    #
+    out_tex_lines <- gsub("\\\\chapter\\{\\\\texorpdfstring\\{[[:print:]]*\\}\\{",
+                          "\\\\chapter\\{",
+                          out_tex_lines[end.system.chapter.line:length(out_tex_lines)])
+
+    chapter_lines <- grep("\\\\chapter\\{[[:alpha:]\\]+",
+                          out_tex_lines[end.system.chapter.line:length(out_tex_lines)])
+
+    first_chapter_line <- min(chapter_lines-1) # minus 1 to allow for hypertarget
+
+    out_tex_lines <- out_tex_lines[first_chapter_line+end.system.chapter.line:length(out_tex_lines)]
   }
 
 

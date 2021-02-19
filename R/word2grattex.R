@@ -92,7 +92,8 @@ word2grattex <- function(path = ".",
   # Search for Report.tex for preamble
   if (!file.exists("Report.tex")) {
     # Download and add current Grattex preamble if not present
-    download.file(url ="https://raw.githubusercontent.com/grattan/grattex/master/Report.tex", destfile = "Report.tex")
+    download.file(url ="https://raw.githubusercontent.com/grattan/grattex/master/Report.tex",
+                  destfile = "Report.tex")
   }
 
 # Download grattex template if required
@@ -115,7 +116,7 @@ out_tex_lines <- convert_doc_to_tex(file.docx, out_tex_file)
 
 # ---- Set construct report framework ---- #
 
-out_tex_lines <- create_preamble(out_tex_file, isSegmented = segmented)
+out_tex_lines <- create_preamble(tex_file = out_tex_file, isSegmented = segmented)
 
 
 # ---- Clean up pandoc conversion annoyances ----------------------------------------
@@ -125,6 +126,7 @@ out_tex_lines <- clean_up_pandoc(out_tex_file)
 
 # TO BE REFACTORED Replacing in-text citations in bib -------------------------------------------------
 # needs to be refactored!
+
     ## This needs to be done before Figure references
     ## to ensure external citation figure references
     ## are included withtin \textcite[][figure~1.1]{...}
